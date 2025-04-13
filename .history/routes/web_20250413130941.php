@@ -23,8 +23,6 @@ Route::middleware(['auth', 'role:administrador'])->group(function () {
     Route::put('/admin/usuarios/{user}', [UserController::class, 'updateRole'])->name('users.updateRole');
 });
 
-Route::get('/test-role', function () {
-    return 'Middleware role registrado';
-})->middleware('role:administrador');
+
 
 require __DIR__.'/auth.php';

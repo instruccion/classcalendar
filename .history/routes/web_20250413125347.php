@@ -18,13 +18,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'role:administrador'])->group(function () {
-    Route::get('/admin/usuarios', [UserController::class, 'index'])->name('users.index');
-    Route::put('/admin/usuarios/{user}', [UserController::class, 'updateRole'])->name('users.updateRole');
-});
-
-Route::get('/test-role', function () {
-    return 'Middleware role registrado';
-})->middleware('role:administrador');
-
 require __DIR__.'/auth.php';

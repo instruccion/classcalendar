@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,14 +16,5 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-Route::middleware(['auth', 'role:administrador'])->group(function () {
-    Route::get('/admin/usuarios', [UserController::class, 'index'])->name('users.index');
-    Route::put('/admin/usuarios/{user}', [UserController::class, 'updateRole'])->name('users.updateRole');
-});
-
-Route::get('/test-role', function () {
-    return 'Middleware role registrado';
-})->middleware('role:administrador');
 
 require __DIR__.'/auth.php';
