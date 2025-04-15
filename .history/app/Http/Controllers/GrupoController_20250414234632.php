@@ -68,5 +68,4 @@ class GrupoController extends Controller
         return redirect()->route('grupos.index')->with('success', 'Grupo eliminado con éxito');
     }
 
-
 }

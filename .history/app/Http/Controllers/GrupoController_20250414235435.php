@@ -26,18 +26,18 @@ class GrupoController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:191',
-            'descripcion' => 'nullable|string',
+        // Validar los datos recibidos
+        $request->validate([
+            'nombre' => 'required|string|max:255',
             'coordinacion_id' => 'required|exists:coordinaciones,id',
         ]);
 
-        $grupo = Grupo::create($validated);
+        // Crear el grupo
+        Grupo::create($request->all());
 
-        registrar_auditoria("Grupo creado", "Se creó el grupo: {$grupo->nombre}");
-
-        return redirect()->route('grupos.index')->with('success', 'Grupo registrado correctamente.');
+        return redirect()->route('grupos.index')->with('success', 'Grupo creado exitosamente');
     }
+
 
     public function edit(Grupo $grupo)
     {

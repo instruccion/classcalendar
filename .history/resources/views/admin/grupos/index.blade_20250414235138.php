@@ -58,8 +58,7 @@
                 <button onclick="document.getElementById('modalNuevoGrupo').close()"
                         class="text-gray-600 hover:text-black text-xl">&times;</button>
             </div>
-            <form action="{{ route('admin.grupos.store') }}" method="POST" class="grid grid-cols-1 gap-4">
-
+            <form action="{{ route('grupos.store') }}" method="POST" class="grid grid-cols-1 gap-4">
                 @csrf
                 <div>
                     <label class="block font-semibold mb-1">Nombre</label>

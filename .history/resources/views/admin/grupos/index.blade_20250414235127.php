@@ -36,7 +36,6 @@
                                 <button onclick="abrirModalEditar({{ $grupo->id }}, '{{ $grupo->nombre }}', '{{ $grupo->coordinacion_id }}')"
                                         class="text-blue-600 hover:underline">Editar</button>
                                 <form method="POST" action="{{ route('admin.grupos.destroy', $grupo) }}" onsubmit="return confirm('¿Eliminar grupo?')">
-
                                     @csrf @method('DELETE')
                                     <button class="text-red-600 hover:underline">Eliminar</button>
                                 </form>
@@ -58,8 +57,7 @@
                 <button onclick="document.getElementById('modalNuevoGrupo').close()"
                         class="text-gray-600 hover:text-black text-xl">&times;</button>
             </div>
-            <form action="{{ route('admin.grupos.store') }}" method="POST" class="grid grid-cols-1 gap-4">
-
+            <form action="{{ route('grupos.store') }}" method="POST" class="grid grid-cols-1 gap-4">
                 @csrf
                 <div>
                     <label class="block font-semibold mb-1">Nombre</label>

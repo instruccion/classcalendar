@@ -60,9 +60,7 @@ Route::middleware(['auth', 'role:administrador'])->prefix('admin')->name('admin.
     Route::resource('cursos', CursoController::class)->names('cursos');
     Route::resource('aulas', AulaController::class)->names('aulas');
     Route::resource('grupos', GrupoController::class)->names('grupos');
-    Route::delete('/admin/grupos/{grupo}', [GrupoController::class, 'destroy'])->name('grupos.destroy');
-    Route::post('/admin/grupos', [GrupoController::class, 'store'])->name('grupos.store');
-
+    
 
     // Auditorías
     Route::get('auditorias', [AuditoriaController::class, 'index'])->name('auditorias.index');

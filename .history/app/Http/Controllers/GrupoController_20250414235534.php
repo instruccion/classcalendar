@@ -61,12 +61,12 @@ class GrupoController extends Controller
     }
 
     public function destroy($id)
-    {
-        $grupo = Grupo::findOrFail($id);
-        $grupo->delete();
+{
+    $grupo = Grupo::findOrFail($id);
+    $grupo->delete();
 
-        return redirect()->route('grupos.index')->with('success', 'Grupo eliminado con éxito');
-    }
+    return redirect()->route('grupos.index')->with('success', 'Grupo eliminado con éxito');
+}
 
 
 }
