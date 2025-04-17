@@ -1,0 +1,265 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="text-xl font-semibold text-gray-800 leading-tight">
+            Usuarios Registrados
+        </h2>
+    </x-slot>
+
+    <div class="py-4 max-w-7xl mx-auto">
+        <!-- Botón para agregar un nuevo usuario -->
+        <button onclick="openCreateModal()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-4">
+            ➕ Nuevo Usuario
+        </button>
+
+        <!-- Tabla de Usuarios -->
+        <div class="overflow-x-auto bg-white shadow rounded-lg">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="px-4 py-2">ID</th>
+                        <th class="px-4 py-2">Nombre</th>
+                        <th class="px-4 py-2">Email</th>
+                        <th class="px-4 py-2">Rol</th>
+                        <th class="px-4 py-2">Activo</th>
+                        <th class="px-4 py-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($users as $user)
+                        <tr class="border-t">
+                            <td class="px-4 py-2">{{ $user->id }}</td>
+                            <td class="px-4 py-2">{{ $user->name }}</td>
+                            <td class="px-4 py-2">{{ $user->email }}</td>
+                            <td class="px-4 py-2">{{ ucfirst($user->rol) }}</td>
+                            <td class="px-4 py-2">{{ $user->is_active ? 'Activo' : 'Inactivo' }}</td>
+                            <td class="px-4 py-2 flex gap-2">
+                                <!-- Botón de Editar (con Modal) -->
+                                <button onclick="openEditModal({{ $user->id }})" class="text-blue-600 hover:underline">Editar</button>
+
+                                <!-- Eliminar -->
+                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('¿Confirmas la eliminación del usuario?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal de Crear Usuario -->
+        <div id="createUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
+            <div class="bg-white w-full max-w-lg rounded-lg shadow-xl p-6">
+                <!-- Encabezado -->
+                <div class="flex items-center justify-between pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">Crear Nuevo Usuario</h3>
+                    <button onclick="closeCreateModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+                </div>
+
+                @if ($errors->any())
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                        <strong>Se encontraron los siguientes errores:</strong>
+                        <ul class="mt-2 list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <!-- Formulario -->
+                <form id="createUserForm" method="POST" action="{{ route('admin.users.store') }}" class="pt-4 space-y-4">
+                    @csrf
+
+                    <!-- Nombre -->
+                    <div>
+                        <label for="createName" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text" id="createName" name="name" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="createEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="createEmail" name="email" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <!-- Rol -->
+                    <div>
+                        <label for="createRol" class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                        <select id="createRol" name="rol" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="" disabled selected>Seleccione un rol</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="coordinador">Coordinador</option>
+                            <option value="analista">Analista</option>
+                            <option value="instructor">Instructor</option>
+                        </select>
+                    </div>
+
+                    <!-- Coordinación -->
+                    @if(Auth::user()->rol === 'administrador')
+                    <div>
+                        <label for="createCoordinacion" class="block text-sm font-medium text-gray-700 mb-1">Coordinación</label>
+                        <select id="createCoordinacion" name="coordinacion_id" class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Seleccione una coordinación</option>
+                            @foreach ($coordinaciones as $coordinacion)
+                                <option value="{{ $coordinacion->id }}">{{ $coordinacion->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+
+
+
+                    <!-- Contraseña -->
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="createPassword" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                            <input type="password" id="createPassword" name="password" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label for="createPasswordConfirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                            <input type="password" id="createPasswordConfirmation" name="password_confirmation" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <!-- Activo -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="createIsActive" name="is_active" value="1" checked
+                            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="createIsActive" class="ml-2 block text-sm text-gray-900">Usuario Activo</label>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex justify-end pt-4 space-x-2">
+                        <button type="button" onclick="closeCreateModal()"
+                                class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                            Crear Usuario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+        <!-- Modal de Editar Usuario -->
+        <div id="editUserModal" class="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50 hidden">
+            <div class="bg-white p-6 rounded-lg w-1/3">
+                <h3 class="text-xl font-semibold mb-4">Editar Usuario</h3>
+                <form id="editUserForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="editUserId" name="user_id">
+
+                    <!-- Nombre -->
+                    <div class="mb-4">
+                        <label for="editName" class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input type="text" id="editName" name="name" class="mt-1 block w-full border rounded px-3 py-2" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-4">
+                        <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="editEmail" name="email" class="mt-1 block w-full border rounded px-3 py-2" required>
+                    </div>
+
+                    <!-- Rol -->
+                    <div class="mb-4">
+                        <label for="editRol" class="block text-sm font-medium text-gray-700">Rol</label>
+                        <select id="editRol" name="rol" class="mt-1 block w-full border rounded px-3 py-2" required>
+                            <option value="administrador">Administrador</option>
+                            <option value="coordinador">Coordinador</option>
+                            <option value="analista">Analista</option>
+                            <option value="instructor">Instructor</option>
+                        </select>
+                    </div>
+
+                    <!-- Coordinación -->
+                    @if (auth()->user()->rol === 'administrador')
+                        <div class="mb-4">
+                            <label for="editCoordinacion" class="block text-sm font-medium text-gray-700">Coordinación</label>
+                            <select id="editCoordinacion" name="coordinacion_id" class="mt-1 block w-full border rounded px-3 py-2">
+                                <option value="">Todas las Coordinaciones</option>
+                                @foreach ($coordinaciones as $coordinacion)
+                                    <option value="{{ $coordinacion->id }}">{{ $coordinacion->nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
+                                        <!-- Activo (checkbox) -->
+                    <div class="mb-4 flex items-center">
+                        <label for="editIsActive" class="text-sm font-medium text-gray-700 mr-2">Activo</label>
+                        <input type="checkbox" id="editIsActive" name="is_active" value="1" class="mt-1">
+                    </div>
+
+                    <!-- Nueva Contraseña -->
+                    <div class="mb-4">
+                        <label for="editPassword" class="block text-sm font-medium text-gray-700">Nueva Contraseña (opcional)</label>
+                        <input type="password" id="editPassword" name="password" class="mt-1 block w-full border rounded px-3 py-2">
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div class="mb-4">
+                        <label for="editPasswordConfirmation" class="block text-sm font-medium text-gray-700">Confirmar Contraseña (opcional)</label>
+                        <input type="password" id="editPasswordConfirmation" name="password_confirmation" class="mt-1 block w-full border rounded px-3 py-2">
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Actualizar Usuario</button>
+                        <button type="button" onclick="closeEditModal()" class="bg-gray-300 text-black px-4 py-2 rounded ml-2">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if ($errors->any())
+                openCreateModal(); // Reabre el modal si hay errores de validación
+            @endif
+        });
+        function openCreateModal() {
+            document.getElementById('createUserModal').classList.remove('hidden');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createUserModal').classList.add('hidden');
+        }
+
+        function openEditModal(userId) {
+            const modal = document.getElementById('editUserModal');
+            modal.classList.remove('hidden');
+
+            // Llenar el formulario con los datos del usuario
+            const user = @json($users); // Pasa los usuarios al JS
+
+            const userData = user.find(u => u.id === userId);
+            document.getElementById('editUserId').value = userData.id;
+            document.getElementById('editName').value = userData.name;
+            document.getElementById('editEmail').value = userData.email;
+            document.getElementById('editRol').value = userData.rol;
+            document.getElementById('editCoordinacion').value = userData.coordinacion_id ?? '';
+            document.getElementById('editIsActive').checked = userData.is_active;
+        }
+
+        function closeEditModal() {
+            document.getElementById('editUserModal').classList.add('hidden');
+        }
+
+        
+    </script>
+</x-app-layout>
