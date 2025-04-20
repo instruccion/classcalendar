@@ -26,10 +26,9 @@
 
         {{-- Barra de filtros secundaria --}}
         <div class="bg-white p-4 rounded shadow-md mb-4">
-            <form method="GET" action="{{ route('admin.programaciones.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form method="GET" action="{{ route('admin.programaciones.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 @if(auth()->user()->esAdministrador() && is_null(auth()->user()->coordinacion_id))
                     <div class="md:col-span-1">
-                        <label for="coordinacion_id" class="block text-sm text-gray-700 mb-1">Coordinación</label>
                         <select name="coordinacion_id" id="coordinacion_id" class="w-full border px-4 py-2 rounded min-w-[19rem] text-sm" onchange="this.form.submit()">
                             <option value="">Todas</option>
                             @foreach($coordinaciones as $coordinacion)
@@ -42,7 +41,6 @@
                 @endif
 
                 <div class="md:col-span-1">
-                    <label for="grupo_id" class="block text-sm text-gray-700 mb-1">Grupo</label>
                     <select name="grupo_id" id="grupo_id" class="w-full border px-4 py-2 rounded min-w-[19rem] text-sm" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         @foreach($grupos as $grupo)
@@ -53,7 +51,7 @@
                     </select>
                 </div>
 
-                <div class="md:col-span-1 flex items-end">
+                <div class="md:col-span-1 flex items-center">
                     <div class="relative w-full">
                         <input type="text" name="buscar" id="buscar" placeholder="Buscar" value="{{ request('buscar') }}"
                             class="w-full border px-4 py-2 pl-4 pr-10 rounded-full text-sm" />
@@ -99,9 +97,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-2 flex gap-2">
-                                    <a href="{{ route('admin.programaciones.edit', $programacion) }}" class="text-[#00AF40] hover:underline text-sm">Editar</a>
-
-
+                                        <a href="{{ route('admin.programaciones.edit', $programacion) }}" class="text-[#00AF40] hover:underline text-sm">Editar</a>
                                         <form action="{{ route('admin.programaciones.destroy', $programacion) }}" method="POST" onsubmit="return confirm('¿Eliminar esta programación?')">
                                             @csrf
                                             @method('DELETE')

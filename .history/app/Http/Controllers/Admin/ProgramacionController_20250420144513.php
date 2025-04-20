@@ -84,23 +84,18 @@ class ProgramacionController extends Controller
         return view('admin.programaciones.edit', compact('programacion', 'grupos', 'cursos', 'instructores', 'aulas', 'feriados'));
     }
 
-    public function update(Request $request, Programacion $programacion)
+
+
+    public function edit(Programacion $programacion)
     {
-        $validated = $request->validate([
-            'grupo_id' => 'required|exists:grupos,id',
-            'curso_id' => 'required|exists:cursos,id',
-            'fecha_inicio' => 'required|date',
-            'hora_inicio' => 'required',
-            'fecha_fin' => 'required|date',
-            'hora_fin' => 'required',
-            'aula_id' => 'required|exists:aulas,id',
-            'instructor_id' => 'nullable|exists:instructores,id',
-            'bloque_codigo' => 'nullable|string|max:255'
-        ]);
+        $user = Auth::user();
 
-        $programacion->update($validated);
+        $grupos = Grupo::with('coordinacion')->orderBy('nombre')->get();
+        $instructores = Instructor::where('activo', true)->orderBy('nombre')->get();
+        $aulas = Aula::where('activa', true)->orderBy('nombre')->get();
+        $feriados = Feriado::pluck('fecha')->map(fn ($f) => $f->format('Y-m-d'))->toArray();
 
-        return redirect()->route('admin.programaciones.index')->with('success', 'Programación actualizada correctamente.');
+        return view('admin.programaciones.edit', compact('programacion', 'grupos', 'instructores', 'aulas', 'feriados'));
     }
 
 

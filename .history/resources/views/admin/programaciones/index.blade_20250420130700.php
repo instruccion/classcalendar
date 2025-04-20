@@ -99,9 +99,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-2 flex gap-2">
-                                    <a href="{{ route('admin.programaciones.edit', $programacion) }}" class="text-[#00AF40] hover:underline text-sm">Editar</a>
-
-
+                                        <a href="{{ route('admin.programaciones.edit', $programacion) }}" class="text-[#00AF40] hover:underline text-sm">Editar</a>
                                         <form action="{{ route('admin.programaciones.destroy', $programacion) }}" method="POST" onsubmit="return confirm('¿Eliminar esta programación?')">
                                             @csrf
                                             @method('DELETE')

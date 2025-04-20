@@ -45,6 +45,8 @@ Route::middleware(['auth', 'role:administrador,coordinador,analista'])->prefix('
 
     // --- INICIO: NUEVAS RUTAS PARA PROGRAMACIONES ---
 
+    Route::resource('programaciones', ProgramacionController::class);
+
     Route::get('programar-bloque', [ProgramacionController::class, 'showProgramarBloque'])
         ->name('programaciones.bloque.show');
 

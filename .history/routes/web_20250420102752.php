@@ -43,24 +43,24 @@ Route::middleware(['auth', 'role:administrador,coordinador,analista'])->prefix('
     Route::post('instructores/{instructor}/documentos/manual', [InstructorController::class, 'asignarDocumentoManual'])->name('instructores.asignarDocumentoManual');
     Route::put('instructores/documentos/{pivot}', [InstructorController::class, 'actualizarDocumento'])->name('admin.instructores.actualizarDocumento');
 
-    // --- INICIO: NUEVAS RUTAS PARA PROGRAMACIONES ---
+        // --- INICIO: NUEVAS RUTAS PARA PROGRAMACIONES ---
 
-    Route::get('programar-bloque', [ProgramacionController::class, 'showProgramarBloque'])
-        ->name('programaciones.bloque.show');
+        Route::resource('programaciones', ProgramacionController::class);
+
+        Route::get('programar-bloque', [ProgramacionController::class, 'showProgramarBloque'])
+             ->name('programaciones.bloque.show');
 
         // --- RUTAS API ---
-    Route::get('api/grupos/{grupo}/cursos', [ProgramacionController::class, 'getCursosPorGrupoApi'])
-        ->name('api.programaciones.cursosPorGrupo');
-    Route::get('api/cursos/{curso}/instructores', [ProgramacionController::class, 'getInstructoresPorCursoApi'])
-        ->name('api.programaciones.instructoresPorCurso');
-    Route::post('api/programaciones/calcular-fecha-fin', [ProgramacionController::class, 'calcularFechaFinApi'])
-        ->name('api.programaciones.calcularFechaFin');
-    Route::get('api/programaciones/verificar-disponibilidad', [ProgramacionController::class, 'verificarDisponibilidadApi'])
-        ->name('api.programaciones.verificarDisponibilidad');
-    Route::get('api/programaciones/detalle-disponibilidad', [ProgramacionController::class, 'getDetalleDisponibilidadApi'])
-        ->name('api.programaciones.detalleDisponibilidad');
-    Route::resource('programaciones', ProgramacionController::class)->parameters([
-        'programaciones' => 'programacion']);
+        Route::get('api/grupos/{grupo}/cursos', [ProgramacionController::class, 'getCursosPorGrupoApi'])
+             ->name('api.programaciones.cursosPorGrupo');
+        Route::get('api/cursos/{curso}/instructores', [ProgramacionController::class, 'getInstructoresPorCursoApi'])
+             ->name('api.programaciones.instructoresPorCurso');
+        Route::post('api/programaciones/calcular-fecha-fin', [ProgramacionController::class, 'calcularFechaFinApi'])
+              ->name('api.programaciones.calcularFechaFin');
+        Route::get('api/programaciones/verificar-disponibilidad', [ProgramacionController::class, 'verificarDisponibilidadApi'])
+             ->name('api.programaciones.verificarDisponibilidad');
+        Route::get('api/programaciones/detalle-disponibilidad', [ProgramacionController::class, 'getDetalleDisponibilidadApi'])
+             ->name('api.programaciones.detalleDisponibilidad');
         // --- FIN: NUEVAS RUTAS PARA PROGRAMACIONES ---
 
     // Resource general para instructores (debe ir después de las rutas personalizadas)

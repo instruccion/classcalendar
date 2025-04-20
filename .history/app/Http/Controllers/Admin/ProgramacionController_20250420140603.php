@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Programacion, Grupo, Instructor, Aula, Feriado, Curso, Coordinacion};
+use App\Models\{Programacion, Grupo, Instructor, Aula, Feriado, Curso};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, Log};
 use Carbon\Carbon;
@@ -41,69 +41,77 @@ class ProgramacionController extends Controller
             });
         }
 
-        $query->whereMonth('fecha_inicio', $request->get('mes', now()->month));
-        $query->whereYear('fecha_inicio', $request->get('anio', now()->year));
-
         $programaciones = $query->orderBy('fecha_inicio', 'desc')->paginate(15);
 
         $coordinaciones = [];
         $grupos = [];
 
         if ($user->esAdministrador()) {
-            $coordinaciones = Coordinacion::orderBy('nombre')->get();
-
+            $coordinaciones = \App\Models\Coordinacion::orderBy('nombre')->get();
             if ($request->filled('coordinacion_id')) {
-                $grupos = Grupo::where('coordinacion_id', $request->coordinacion_id)->orderBy('nombre')->get();
-            } elseif ($user->coordinacion_id) {
-                $grupos = Grupo::where('coordinacion_id', $user->coordinacion_id)->orderBy('nombre')->get();
-            } else {
-                $grupos = Grupo::orderBy('nombre')->get();
+                $grupos = \App\Models\Grupo::where('coordinacion_id', $request->coordinacion_id)->orderBy('nombre')->get();
             }
         } else {
-            $grupos = Grupo::where('coordinacion_id', $user->coordinacion_id)->orderBy('nombre')->get();
+            $grupos = \App\Models\Grupo::where('coordinacion_id', $user->coordinacion_id)->orderBy('nombre')->get();
         }
+        $programacionesAgrupadas = $programaciones
+        ->getCollection()
+        ->groupBy(function ($item) {
+            return $item->grupo->nombre ?? 'Sin Grupo';
+        })
+        ->map(function ($items) {
+            return $items->groupBy(function ($item) {
+                return $item->bloque ?? null;
+            });
+        });
 
         $programacionesAgrupadas = $programaciones
             ->getCollection()
             ->groupBy(fn($p) => $p->grupo->nombre)
             ->map(fn($grupo) => $grupo->groupBy(fn($p) => $p->bloque_codigo ?? '—'));
 
-        return view('admin.programaciones.index', compact('programaciones', 'coordinaciones', 'grupos', 'programacionesAgrupadas'));
+
+        return view('admin.programaciones.index', compact('programaciones', 'programacionesAgrupadas', 'coordinaciones', 'grupos'));
+
     }
 
-    public function edit(Programacion $programacion)
+
+    public function create()
+    {
+        $user = Auth::user();
+        $grupos = [];
+        if ($user->coordinacion_id) {
+            $grupos = Grupo::where('coordinacion_id', $user->coordinacion_id)
+                ->with('coordinacion')
+                ->orderBy('nombre')->get();
+        } elseif ($user->esAdministrador()) {
+            $grupos = Grupo::with('coordinacion')
+                ->orderBy('coordinacion_id')->orderBy('nombre')->get();
+        }
+
+        $instructores = Instructor::where('activo', true)->orderBy('nombre')->get();
+        $aulas = Aula::where('activa', true)->orderBy('nombre')->get();
+        $feriados = Feriado::pluck('fecha')->map(fn ($fecha) => $fecha->format('Y-m-d'))->toArray();
+
+        return view('admin.programaciones.create', compact('grupos', 'instructores', 'aulas', 'feriados'));
+    }
+
+    public function getCursosPorGrupoApi(Grupo $grupo)
     {
         $user = Auth::user();
 
-        $grupos = Grupo::with('coordinacion')->orderBy('nombre')->get();
-        $cursos = Curso::orderBy('nombre')->get();
-        $instructores = Instructor::where('activo', true)->orderBy('nombre')->get();
-        $aulas = Aula::where('activa', true)->orderBy('nombre')->get();
-        $feriados = Feriado::pluck('fecha')->map(fn ($f) => $f->format('Y-m-d'))->toArray();
+        if (!($user->esAdministrador() || ($user->coordinacion_id && $user->coordinacion_id === $grupo->coordinacion_id))) {
+            return response()->json(['error' => 'No autorizado para acceder a los cursos de este grupo.'], 403);
+        }
 
-        return view('admin.programaciones.edit', compact('programacion', 'grupos', 'cursos', 'instructores', 'aulas', 'feriados'));
+        try {
+            $cursos = $grupo->cursos()->get(['cursos.id', 'cursos.nombre', 'cursos.duracion_horas']);
+            return response()->json($cursos);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener cursos por grupo: " . $e->getMessage());
+            return response()->json(['error' => 'Error interno al obtener los cursos.'], 500);
+        }
     }
-
-    public function update(Request $request, Programacion $programacion)
-    {
-        $validated = $request->validate([
-            'grupo_id' => 'required|exists:grupos,id',
-            'curso_id' => 'required|exists:cursos,id',
-            'fecha_inicio' => 'required|date',
-            'hora_inicio' => 'required',
-            'fecha_fin' => 'required|date',
-            'hora_fin' => 'required',
-            'aula_id' => 'required|exists:aulas,id',
-            'instructor_id' => 'nullable|exists:instructores,id',
-            'bloque_codigo' => 'nullable|string|max:255'
-        ]);
-
-        $programacion->update($validated);
-
-        return redirect()->route('admin.programaciones.index')->with('success', 'Programación actualizada correctamente.');
-    }
-
-
 
     public function calcularFechaFinApi(Request $request)
     {

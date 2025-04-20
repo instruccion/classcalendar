@@ -26,7 +26,7 @@
 
         {{-- Barra de filtros secundaria --}}
         <div class="bg-white p-4 rounded shadow-md mb-4">
-            <form method="GET" action="{{ route('admin.programaciones.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form method="GET" action="{{ route('admin.programaciones.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 @if(auth()->user()->esAdministrador() && is_null(auth()->user()->coordinacion_id))
                     <div class="md:col-span-1">
                         <label for="coordinacion_id" class="block text-sm text-gray-700 mb-1">Coordinación</label>
@@ -99,9 +99,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-2 flex gap-2">
-                                    <a href="{{ route('admin.programaciones.edit', $programacion) }}" class="text-[#00AF40] hover:underline text-sm">Editar</a>
-
-
+                                        <a href="{{ route('admin.programaciones.edit', $programacion) }}" class="text-[#00AF40] hover:underline text-sm">Editar</a>
                                         <form action="{{ route('admin.programaciones.destroy', $programacion) }}" method="POST" onsubmit="return confirm('¿Eliminar esta programación?')">
                                             @csrf
                                             @method('DELETE')

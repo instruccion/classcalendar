@@ -84,25 +84,6 @@ class ProgramacionController extends Controller
         return view('admin.programaciones.edit', compact('programacion', 'grupos', 'cursos', 'instructores', 'aulas', 'feriados'));
     }
 
-    public function update(Request $request, Programacion $programacion)
-    {
-        $validated = $request->validate([
-            'grupo_id' => 'required|exists:grupos,id',
-            'curso_id' => 'required|exists:cursos,id',
-            'fecha_inicio' => 'required|date',
-            'hora_inicio' => 'required',
-            'fecha_fin' => 'required|date',
-            'hora_fin' => 'required',
-            'aula_id' => 'required|exists:aulas,id',
-            'instructor_id' => 'nullable|exists:instructores,id',
-            'bloque_codigo' => 'nullable|string|max:255'
-        ]);
-
-        $programacion->update($validated);
-
-        return redirect()->route('admin.programaciones.index')->with('success', 'Programación actualizada correctamente.');
-    }
-
 
 
     public function calcularFechaFinApi(Request $request)

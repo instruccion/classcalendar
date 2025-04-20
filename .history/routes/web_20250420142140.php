@@ -45,6 +45,8 @@ Route::middleware(['auth', 'role:administrador,coordinador,analista'])->prefix('
 
     // --- INICIO: NUEVAS RUTAS PARA PROGRAMACIONES ---
 
+    Route::resource('programaciones', ProgramacionController::class);
+
     Route::get('programar-bloque', [ProgramacionController::class, 'showProgramarBloque'])
         ->name('programaciones.bloque.show');
 
@@ -59,8 +61,7 @@ Route::middleware(['auth', 'role:administrador,coordinador,analista'])->prefix('
         ->name('api.programaciones.verificarDisponibilidad');
     Route::get('api/programaciones/detalle-disponibilidad', [ProgramacionController::class, 'getDetalleDisponibilidadApi'])
         ->name('api.programaciones.detalleDisponibilidad');
-    Route::resource('programaciones', ProgramacionController::class)->parameters([
-        'programaciones' => 'programacion']);
+    
         // --- FIN: NUEVAS RUTAS PARA PROGRAMACIONES ---
 
     // Resource general para instructores (debe ir después de las rutas personalizadas)
