@@ -1,27 +1,18 @@
-<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
-<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('app-layout'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes([]); ?>
-     <?php $__env->slot('header', null, []); ?> 
+<x-app-layout>
+    <x-slot name="header">
         <h2 class="text-xl font-semibold text-gray-800 leading-tight">
             Programar Nuevo Curso
         </h2>
-     <?php $__env->endSlot(); ?>
+    </x-slot>
 
-    
-    
+    {{-- CSS de FullCalendar se carga desde app.css (vía Vite/NPM) --}}
+    {{-- No se necesitan links CDN aquí --}}
 
     <div class="py-6 max-w-4xl mx-auto">
 
-        
-        
-        
+        {{-- ============================================= --}}
+        {{--  SCRIPT ALPINE DEFINIDO ANTES DE USARSE      --}}
+        {{-- ============================================= --}}
         <script>
             function programacionForm(config) {
                 return {
@@ -194,26 +185,12 @@
                                              events: data.eventos || [], headerToolbar: { left: 'prev,next', center: 'title', right: '' },
                                              displayEventTime: false,
                                              eventClick: (info) => {
-                                                const props = info.event.extendedProps;
-                                                const color = props.color || '#9CA3AF';
-
-                                                document.getElementById('modalEventoTitulo').textContent = info.event.title;
-
-                                                const colorCircle = document.getElementById('modalEventoColor');
-                                                colorCircle.style.backgroundColor = color;
-                                                colorCircle.style.borderColor = color; // ← Esta línea es clave
-
-                                                document.getElementById('modalEventoDescripcion').innerHTML = `
-                                                    <p><strong>Grupo:</strong> ${props.grupo || 'N/A'}</p>
-                                                    <p><strong>Fechas:</strong> ${props.fecha_inicio_fmt || '?' } - ${props.fecha_fin_fmt || '?'}</p>
-                                                    <p><strong>Horario:</strong> ${props.hora_inicio_fmt || '?' } - ${props.hora_fin_fmt || '?'}</p>
-                                                    <p><strong>${props.tipo_recurso_opuesto || 'Recurso'}:</strong> ${props.nombre_recurso_opuesto || 'N/A'}</p>
-                                                    <p><strong>Coordinación:</strong> ${props.coordinacion || 'N/A'}</p>
-                                                `;
-
-                                                document.getElementById('modalEventoDetalle').showModal();
-                                            }
-
+                                                 const props = info.event.extendedProps;
+                                                 document.getElementById('modalEventoTitulo').textContent = info.event.title;
+                                                 document.getElementById('modalEventoColor').style.backgroundColor = props.color || '#9CA3AF';
+                                                 document.getElementById('modalEventoDescripcion').innerHTML = `<p><strong>Grupo:</strong> ${props.grupo || 'N/A'}</p><p><strong>Fechas:</strong> ${props.fecha_inicio_fmt || '?'} - ${props.fecha_fin_fmt || '?'}</p><p><strong>Horario:</strong> ${props.hora_inicio_fmt || '?'} - ${props.hora_fin_fmt || '?'}</p><p><strong>${props.tipo_recurso_opuesto || 'Recurso'}:</strong> ${props.nombre_recurso_opuesto || 'N/A'}</p><p><strong>Coordinación:</strong> ${props.coordinacion || 'N/A'}</p>`;
+                                                 document.getElementById('modalEventoDetalle').showModal();
+                                             }
                                          });
                                         this.calendarInstance.render();
                                         console.log("Alpine: openAvailabilityModal (rAF) - Calendario OK.");
@@ -257,9 +234,7 @@
                          if (!this.startDate) { alert('Seleccione Fecha Inicio.'); return; }
                          if (!this.endDate) { alert('Falta Fecha Fin.'); return; }
                          if (!this.selectedAulaId) { alert('Seleccione Aula.'); return; }
-                         if (!this.selectedInstructorId) {
-                                console.warn('Advertencia: No se asignó instructor a esta programación.');
-                            }
+                         if (!this.selectedInstructorId) { alert('Seleccione Instructor.'); return; }
                          if (this.aulaOccupied) { if (!confirm('ADVERTENCIA: Aula ocupada. ¿Continuar?')) return; }
                          if (this.instructorOccupied) { if (!confirm('ADVERTENCIA: Instructor ocupado. ¿Continuar?')) return; }
                          console.log('Alpine: Enviando formulario...');
@@ -269,65 +244,46 @@
                 } // Fin del return
             } // Fin de programacionForm
         </script>
-        
-        
-        
+        {{-- ============================================= --}}
+        {{-- FIN SCRIPT ALPINE --}}
+        {{-- ============================================= --}}
 
 
-        
+        {{-- DIV QUE USA EL SCRIPT ALPINE (x-data) --}}
         <div class="bg-white p-6 rounded shadow-md"
              x-data="programacionForm({
-                 grupos: <?php echo e(Js::from($grupos)); ?>,
-                 instructoresActivos: <?php echo e(Js::from($instructores)); ?>,
-                 aulasActivas: <?php echo e(Js::from($aulas)); ?>,
-                 feriados: <?php echo e(Js::from($feriados)); ?>,
+                 grupos: {{ Js::from($grupos) }},
+                 instructoresActivos: {{ Js::from($instructores) }},
+                 aulasActivas: {{ Js::from($aulas) }},
+                 feriados: {{ Js::from($feriados) }},
                  rutasApi: {
-                     cursosPorGrupo: '<?php echo e(route('admin.api.programaciones.cursosPorGrupo', ['grupo' => ':grupoId'])); ?>',
-                     instructoresPorCurso: '<?php echo e(route('admin.api.programaciones.instructoresPorCurso', ['curso' => ':cursoId'])); ?>',
-                     calcularFechaFin: '<?php echo e(route('admin.api.programaciones.calcularFechaFin')); ?>',
-                     verificarDisponibilidad: '<?php echo e(route('admin.api.programaciones.verificarDisponibilidad')); ?>',
-                     detalleDisponibilidad: '<?php echo e(route('admin.api.programaciones.detalleDisponibilidad')); ?>',
-                     store: '<?php echo e(route('admin.programaciones.store')); ?>' // Ruta para guardar nuevo
+                     cursosPorGrupo: '{{ route('admin.api.programaciones.cursosPorGrupo', ['grupo' => ':grupoId']) }}',
+                     instructoresPorCurso: '{{ route('admin.api.programaciones.instructoresPorCurso', ['curso' => ':cursoId']) }}',
+                     calcularFechaFin: '{{ route('admin.api.programaciones.calcularFechaFin') }}',
+                     verificarDisponibilidad: '{{ route('admin.api.programaciones.verificarDisponibilidad') }}',
+                     detalleDisponibilidad: '{{ route('admin.api.programaciones.detalleDisponibilidad') }}',
+                     store: '{{ route('admin.programaciones.store') }}' // Ruta para guardar nuevo
                  },
-                 csrfToken: '<?php echo e(csrf_token()); ?>'
+                 csrfToken: '{{ csrf_token() }}'
              })"
-             x-init="init()"> 
+             x-init="init()"> {{-- Llamar a init al inicializar --}}
 
-            
+            {{-- Contenido del formulario (HTML) --}}
             <div class="flex justify-between items-center mb-6 pb-2 border-b">
                 <h1 class="text-2xl font-bold">Programar Curso</h1>
-                <a href="<?php echo e(route('admin.programaciones.bloque.show')); ?>" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
+                <a href="{{ route('admin.programaciones.bloque.show') }}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
                     📦 Programar por Bloque
                 </a>
             </div>
 
-            <?php if (isset($component)) { $__componentOriginalb24df6adf99a77ed35057e476f61e153 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginalb24df6adf99a77ed35057e476f61e153 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.validation-errors','data' => ['class' => 'mb-4']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('validation-errors'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'mb-4']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginalb24df6adf99a77ed35057e476f61e153)): ?>
-<?php $attributes = $__attributesOriginalb24df6adf99a77ed35057e476f61e153; ?>
-<?php unset($__attributesOriginalb24df6adf99a77ed35057e476f61e153); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginalb24df6adf99a77ed35057e476f61e153)): ?>
-<?php $component = $__componentOriginalb24df6adf99a77ed35057e476f61e153; ?>
-<?php unset($__componentOriginalb24df6adf99a77ed35057e476f61e153); ?>
-<?php endif; ?>
+            <x-validation-errors class="mb-4" />
 
             <form x-bind:action="formAction" method="POST" id="form-programacion" @submit.prevent="submitForm"
                   class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <?php echo csrf_field(); ?>
+                @csrf
                 <input type="hidden" name="_method" x-bind:value="formMethod">
 
-                
+                {{-- Campos del formulario --}}
                  <!-- Grupo -->
                  <div>
                     <label for="grupo_id" class="block font-semibold mb-1">Grupo <span class="text-red-500">*</span></label>
@@ -400,7 +356,7 @@
                  <div class="border-t pt-4 mt-2">
                      <label for="instructor_id" class="block font-semibold mb-1">Instructor <span class="text-red-500">*</span></label>
                      <div class="flex gap-2 items-center">
-                         <select name="instructor_id" id="instructor_id" x-model="selectedInstructorId" @change="checkAvailability('instructor')" :disabled="isLoadingInstructors || !selectedCourseId" class="w-full border px-4 py-2 rounded bg-white focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-100" :class="{ 'border-red-500 text-red-600 font-bold': instructorOccupied }">
+                         <select name="instructor_id" id="instructor_id" required x-model="selectedInstructorId" @change="checkAvailability('instructor')" :disabled="isLoadingInstructors || !selectedCourseId" class="w-full border px-4 py-2 rounded bg-white focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-100" :class="{ 'border-red-500 text-red-600 font-bold': instructorOccupied }">
                              <option value="" x-show="!selectedCourseId">Seleccione un curso primero...</option>
                              <option value="" x-show="selectedCourseId && isLoadingInstructors">Cargando instructores...</option>
                              <option value="" x-show="selectedCourseId && !isLoadingInstructors && availableInstructors.length === 0">No hay instructores para este curso...</option>
@@ -422,35 +378,27 @@
                      </button>
                  </div>
 
-            </form> 
-
-            
-            <div x-show="showEndDateToast"
-                x-transition
-                x-cloak
-                class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50"
-                x-init="$watch('showEndDateToast', val => { if (val) setTimeout(() => showEndDateToast = false, 3500) })">
-                📅 Fecha fin estimada: <span x-text="calculatedEndDateText"></span>
-            </div>
+            </form> {{-- Fin del Formulario --}}
 
 
-        </div> 
 
-        
+        </div> {{-- Fin del div x-data --}}
+
+        {{-- Modales y Toast --}}
         <dialog id="modalDisponibilidad" class="w-full max-w-4xl p-0 rounded-lg shadow-lg backdrop:bg-black/40"
         x-data="{ isLoadingAvailability: false }"
         x-on:open-modal-availability.window="isLoadingAvailability = true"
         x-on:close-modal-availability.window="isLoadingAvailability = false">
             <div class="bg-white p-6 relative">
 
-                 
+                 {{-- Usamos el cierre directo por ID --}}
                  <button onclick="document.getElementById('modalDisponibilidad').close()" class="absolute top-2 right-3 text-gray-600 hover:text-gray-900 text-2xl leading-none">×</button>
                  <h2 class="text-xl font-bold mb-4" id="modalTitulo">Disponibilidad</h2>
 
-                 
+                 {{-- Mensaje de Carga con x-show --}}
                  <div x-show="isLoadingAvailability" x-transition class="text-center py-10">Cargando disponibilidad...</div>
 
-                 
+                 {{-- Contenido con x-show (siempre en el DOM, solo se oculta/muestra) --}}
                  <div x-show="!isLoadingAvailability" x-transition x-cloak class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                      <div id="mini-calendar" class="border rounded p-2 h-auto max-h-[450px] overflow-auto text-sm"></div>
                      <div id="tabla-detalle" class="overflow-y-auto max-h-[450px]">
@@ -464,30 +412,24 @@
         </dialog>
 
         <dialog id="modalEventoDetalle" class="w-[90%] max-w-md p-0 rounded-lg shadow-lg backdrop:bg-black/40">
-             
+             {{-- Contenido del modal --}}
              <div class="bg-white p-6 text-center relative">
                  <h2 id="modalEventoTitulo" class="text-xl font-bold text-gray-800 mb-2">Detalle del Evento</h2>
                  <div class="flex items-center justify-center gap-3 mb-4">
                      <span id="modalEventoColor" class="w-4 h-4 rounded-full inline-block border border-gray-300 flex-shrink-0"></span>
                      <p id="modalEventoDescripcion" class="text-gray-700 text-sm text-left"></p>
                  </div>
-                 
+                 {{-- Usaremos $dispatch para cerrar este modal también, por consistencia --}}
                  <button onclick="document.getElementById('modalEventoDetalle').close()" class="mt-4 bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 transition">
                      Cerrar
                  </button>
              </div>
         </dialog>
 
-    </div> 
+        <div id="toast-fecha-fin" x-show="showEndDateToast" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform translate-y-2" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+            📅 Fecha fin estimada: <span x-text="calculatedEndDateText"></span>
+        </div>
 
- <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
-<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
-<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
-<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
-<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
-<?php endif; ?>
-<?php /**PATH C:\wamp64\www\cursoslaser\resources\views/admin/programaciones/create.blade.php ENDPATH**/ ?>
+    </div> {{-- Fin del div py-6 --}}
+
+</x-app-layout>

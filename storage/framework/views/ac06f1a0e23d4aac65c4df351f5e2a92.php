@@ -250,6 +250,18 @@
         </div>
     <?php endif; ?>
 
+    <script>
+        // Listener global para cerrar modales con $dispatch('close-dialog', 'modalID')
+        window.addEventListener('close-dialog', event => {
+            const id = event.detail;
+            const dialog = document.getElementById(id);
+            if (dialog && typeof dialog.close === 'function') {
+                dialog.close();
+            } else {
+                console.warn(`No se pudo cerrar el dialog con ID: ${id}`);
+            }
+        });
+    </script>
 
 
 

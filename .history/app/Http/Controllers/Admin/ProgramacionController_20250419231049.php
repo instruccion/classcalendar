@@ -209,7 +209,6 @@ class ProgramacionController extends Controller
                     'extendedProps' => [
                         'grupo' => $ocupacion->grupo?->nombre ?? 'N/A',
                         'coordinacion' => $ocupacion->grupo?->coordinacion?->nombre ?? 'N/A',
-                        'color' => $colorCoord, 
                         'fecha_inicio_fmt' => $fechaInicioFmt,
                         'fecha_fin_fmt' => $fechaFinFmt,
                         'hora_inicio_fmt' => $horaInicioFmt,

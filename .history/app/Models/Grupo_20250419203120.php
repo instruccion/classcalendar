@@ -37,7 +37,6 @@ class Grupo extends Model
     // Relación con Cursos (muchos a muchos)
     public function cursos()
     {
-        return $this->belongsToMany(Curso::class, 'curso_grupo', 'grupo_id', 'curso_id');
-
+        return $this->belongsToMany(Curso::class, 'curso_grupo');
     }
 }

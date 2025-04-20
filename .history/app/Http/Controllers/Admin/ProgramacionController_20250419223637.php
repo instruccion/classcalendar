@@ -65,7 +65,7 @@ class ProgramacionController extends Controller
 
             $fechaInicio = Carbon::parse($validated['inicio'] . ' ' . $validated['hora_inicio']);
             $duracionHorasAcademicas = $validated['horas'];
-            $minutosTotalesRequeridos = $duracionHorasAcademicas * 50;
+            $minutosTotalesRequeridos = $duracionHorasAcademicas * 45;
 
             // Asegurarse que la hora de inicio sea válida (dentro del horario laboral)
              if ($fechaInicio->format('H:i') < '08:30') {
@@ -153,6 +153,7 @@ class ProgramacionController extends Controller
                  'hora_fin' => $fechaActual->format('H:i')
              ]);
 
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning("Error de validación al calcular fecha fin (API): " . json_encode($e->errors()));
             return response()->json(['error' => 'Datos inválidos para calcular fecha.', 'details' => $e->errors()], 422);
@@ -162,115 +163,96 @@ class ProgramacionController extends Controller
         }
     }
 
-    public function getDetalleDisponibilidadApi(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
-            'tipo' => 'required|in:instructor,aula',
-            'id' => 'required|integer|min:1',
+            'grupo_id'      => 'required|exists:grupos,id',
+            'curso_id'      => 'required|exists:cursos,id',
+            'bloque_codigo' => 'nullable|string|max:191',
+            'fecha_inicio'  => 'required|date_format:Y-m-d',
+            'hora_inicio'   => 'required|date_format:H:i',
+            'aula_id'       => 'nullable|exists:aulas,id',
+            'instructor_id' => 'nullable|exists:instructores,id',
         ]);
 
-        $tipo = $validated['tipo'];
-        $resourceId = $validated['id'];
+        $curso = Curso::find($validated['curso_id']);
+        $grupo = Grupo::with('coordinacion')->find($validated['grupo_id']);
+        $aula = $validated['aula_id'] ? Aula::find($validated['aula_id']) : null;
+        $instructor = $validated['instructor_id'] ? Instructor::find($validated['instructor_id']) : null;
+        $user = Auth::user();
 
-        try {
-            $eventos = [];
-            $tabla = [];
+        $fechaInicio = Carbon::parse($validated['fecha_inicio'] . ' ' . $validated['hora_inicio']);
+        $minutosTotales = $curso->duracion_horas * 45;
+        $fechaActual = $fechaInicio->copy();
+        $minutosRestantes = $minutosTotales;
+        $horaFin = null;
+        $feriados = Feriado::pluck('fecha')->map(fn ($f) => $f->format('Y-m-d'))->toArray();
 
-            $query = Programacion::query()
-                ->with([
-                    'curso:id,nombre',
-                    'grupo:id,nombre,coordinacion_id',
-                    'grupo.coordinacion:id,nombre,color'
-                ])
-                ->where($tipo . '_id', $resourceId)
-                ->orderBy('fecha_inicio', 'asc')
-                ->orderBy('hora_inicio', 'asc');
-
-            $ocupaciones = $query->get();
-
-            foreach ($ocupaciones as $ocupacion) {
-                if (!$ocupacion->fecha_inicio || !$ocupacion->fecha_fin || !$ocupacion->hora_inicio || !$ocupacion->hora_fin || !$ocupacion->curso) {
-                    Log::warning("Ocupación incompleta: ID {$ocupacion->id}");
-                    continue;
-                }
-
-                $fechaInicioFmt = $ocupacion->fecha_inicio->format('d/m/Y');
-                $fechaFinFmt = $ocupacion->fecha_fin->format('d/m/Y');
-                $horaInicioFmt = $ocupacion->hora_inicio->format('H:i');
-                $horaFinFmt = $ocupacion->hora_fin->format('H:i');
-                $colorCoord = $ocupacion->grupo?->coordinacion?->color ?? '#6B7280';
-
-                $eventos[] = [
-                    'title' => $ocupacion->curso->nombre,
-                    'start' => $ocupacion->fecha_inicio->format('Y-m-d'),
-                    'end' => ($fechaInicioFmt !== $fechaFinFmt) ? $ocupacion->fecha_fin->addDay()->format('Y-m-d') : null,
-                    'allDay' => ($fechaInicioFmt !== $fechaFinFmt),
-                    'color' => $colorCoord,
-                    'extendedProps' => [
-                        'grupo' => $ocupacion->grupo?->nombre ?? 'N/A',
-                        'coordinacion' => $ocupacion->grupo?->coordinacion?->nombre ?? 'N/A',
-                        'color' => $colorCoord, 
-                        'fecha_inicio_fmt' => $fechaInicioFmt,
-                        'fecha_fin_fmt' => $fechaFinFmt,
-                        'hora_inicio_fmt' => $horaInicioFmt,
-                        'hora_fin_fmt' => $horaFinFmt
-                    ]
-                ];
-
-                $tabla[] = [
-                    'fecha' => ($fechaInicioFmt === $fechaFinFmt) ? $fechaInicioFmt : $fechaInicioFmt.' - '.$fechaFinFmt,
-                    'hora_inicio' => $horaInicioFmt,
-                    'hora_fin' => $horaFinFmt,
-                    'curso' => $ocupacion->curso->nombre,
-                    'coordinacion' => $ocupacion->grupo?->coordinacion?->nombre ?? 'N/A',
-                    'color' => $colorCoord,
-                ];
+        while ($minutosRestantes > 0) {
+            if ($fechaActual->isWeekend() || in_array($fechaActual->format('Y-m-d'), $feriados)) {
+                $fechaActual->addDay()->setTime(8, 30);
+                continue;
             }
 
-            return response()->json([
-                'eventos' => $eventos,
-                'tabla' => $tabla,
-            ]);
+            $minutosDisponiblesHoy = 0;
+            $horaActual = $fechaActual->format('H:i');
 
-        } catch (\Exception $e) {
-            Log::error("Error al obtener detalle disponibilidad ({$tipo} ID: {$resourceId}): " . $e->getMessage());
-            return response()->json(['error' => 'Error interno al obtener los detalles.'], 500);
+            if ($horaActual < '12:00') {
+                $minutosAntesAlmuerzo = (12 * 60) - ($fechaActual->hour * 60 + $fechaActual->minute);
+                $minutosDisponiblesHoy += max($minutosAntesAlmuerzo, 0);
+                $fechaActual->setTime(13, 0);
+            } elseif ($horaActual >= '12:00' && $horaActual < '13:00') {
+                $fechaActual->setTime(13, 0);
+            }
+
+            if ($fechaActual->format('H:i') >= '13:00' && $fechaActual->format('H:i') < '17:00') {
+                $minutosAntesFin = (17 * 60) - ($fechaActual->hour * 60 + $fechaActual->minute);
+                $minutosDisponiblesHoy += max($minutosAntesFin, 0);
+            }
+
+            if ($minutosDisponiblesHoy <= 0) {
+                $fechaActual->addDay()->setTime(8, 30);
+                continue;
+            }
+
+            if ($minutosRestantes <= $minutosDisponiblesHoy) {
+                $horaFin = $fechaActual->copy()->addMinutes($minutosRestantes);
+                $minutosRestantes = 0;
+            } else {
+                $minutosRestantes -= $minutosDisponiblesHoy;
+                $fechaActual->addDay()->setTime(8, 30);
+            }
         }
-    }
 
-    public function verificarDisponibilidadApi(Request $request)
-    {
-        $validated = $request->validate([
-            'tipo' => 'required|in:instructor,aula',
-            'id' => 'required|integer|min:1',
-            'fecha_inicio' => 'required|date_format:Y-m-d',
-            'fecha_fin' => 'required|date_format:Y-m-d',
-            'hora_inicio' => 'required|date_format:H:i',
-            'hora_fin' => 'required|date_format:H:i',
-            'programacion_id' => 'nullable|integer|min:1'
+        $fechaFinCalculada = $horaFin->copy()->startOfDay();
+        $horaFinCalculada = $horaFin->format('H:i:s');
+
+        $programacion = Programacion::create([
+            'grupo_id' => $grupo->id,
+            'curso_id' => $curso->id,
+            'bloque_codigo' => $request->input('bloque_codigo'),
+            'fecha_inicio' => $validated['fecha_inicio'],
+            'hora_inicio' => $validated['hora_inicio'],
+            'fecha_fin' => $fechaFinCalculada->format('Y-m-d'),
+            'hora_fin' => $horaFinCalculada,
+            'aula_id' => $aula?->id,
+            'instructor_id' => $instructor?->id,
+            'estado' => 'programado',
+            'coordinacion_id' => $grupo->coordinacion_id,
+            'user_id' => $user->id,
+            'notificado_inac' => false,
         ]);
 
-        try {
-            $columnaId = $validated['tipo'] . '_id';
-            $resourceId = $validated['id'];
-            $inicio = Carbon::parse($validated['fecha_inicio'] . ' ' . $validated['hora_inicio']);
-            $fin = Carbon::parse($validated['fecha_fin'] . ' ' . $validated['hora_fin']);
-
-            $query = Programacion::where($columnaId, $resourceId)
-                ->where(function ($q) use ($inicio, $fin) {
-                    $q->whereRaw('TIMESTAMP(fecha_inicio, hora_inicio) < ?', [$fin])
-                      ->whereRaw('TIMESTAMP(fecha_fin, hora_fin) > ?', [$inicio]);
-                });
-
-            if (!empty($validated['programacion_id'])) {
-                $query->where('id', '!=', $validated['programacion_id']);
-            }
-
-            return response()->json(['ocupado' => $query->exists()]);
-
-        } catch (\Exception $e) {
-            Log::error("Error al verificar disponibilidad: " . $e->getMessage());
-            return response()->json(['ocupado' => false, 'error' => 'Error interno'], 500);
+        if (function_exists('registrar_auditoria')) {
+            registrar_auditoria(
+                "Programación Creada",
+                "Curso '{$curso->nombre}' programado para Grupo '{$grupo->nombre}' del {$validated['fecha_inicio']} al {$fechaFinCalculada->format('Y-m-d')}. ID: {$programacion->id}"
+            );
+        } else {
+            Log::info("Programación creada: ID {$programacion->id}");
         }
+
+        return redirect()->route('admin.programaciones.create')
+            ->with('success', '¡Curso programado exitosamente!');
     }
 }

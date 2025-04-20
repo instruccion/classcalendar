@@ -54,7 +54,7 @@ class ProgramacionController extends Controller
 
     public function calcularFechaFinApi(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'inicio' => 'required|date_format:Y-m-d',
             'horas' => 'required|integer|min:1',
             'hora_inicio' => 'required|date_format:H:i',
@@ -63,102 +63,61 @@ class ProgramacionController extends Controller
         try {
             $feriados = Feriado::pluck('fecha')->map(fn ($f) => $f->format('Y-m-d'))->toArray();
 
-            $fechaInicio = Carbon::parse($validated['inicio'] . ' ' . $validated['hora_inicio']);
-            $duracionHorasAcademicas = $validated['horas'];
-            $minutosTotalesRequeridos = $duracionHorasAcademicas * 50;
+            $fechaInicio = Carbon::parse($request->input('inicio') . ' ' . $request->input('hora_inicio'));
+            $minutosTotales = $request->input('horas') * 50;
+            $fechaActual = $fechaInicio->copy();
+            $minutosRestantes = $minutosTotales;
+            $horaFin = null;
 
-            // Asegurarse que la hora de inicio sea válida (dentro del horario laboral)
-             if ($fechaInicio->format('H:i') < '08:30') {
-                $fechaInicio->setTime(8, 30);
-             } elseif ($fechaInicio->format('H:i') >= '12:00' && $fechaInicio->format('H:i') < '13:00') {
-                 // Si empieza en hora de almuerzo, mover a la 1 PM
-                 $fechaInicio->setTime(13, 0);
-             } elseif ($fechaInicio->format('H:i') >= '17:00') {
-                 // Si empieza después de las 5 PM, mover al día siguiente hábil a las 8:30 AM
-                 $fechaInicio->addDay()->setTime(8, 30);
-                 while ($fechaInicio->isWeekend() || in_array($fechaInicio->format('Y-m-d'), $feriados)) {
-                     $fechaInicio->addDay();
-                 }
-             }
+            while ($minutosRestantes > 0) {
+                if ($fechaActual->isWeekend() || in_array($fechaActual->format('Y-m-d'), $feriados)) {
+                    $fechaActual->addDay()->setTime(8, 30);
+                    continue;
+                }
 
+                $minutosDisponiblesHoy = 0;
+                $horaActual = $fechaActual->format('H:i');
 
-             $fechaActual = $fechaInicio->copy(); // Ya está inicializada y ajustada
-             $minutosAcumulados = 0;
-             $minutosNecesarios = $minutosTotalesRequeridos; // Usar una variable separada
+                if ($horaActual < '12:00') {
+                    $inicioManana = clone $fechaActual;
+                    if ($horaActual < '08:30') $fechaActual->setTime(8, 30);
+                    $finManana = $fechaActual->copy()->setTime(12, 0);
+                    $minutosManana = $fechaActual->diffInMinutes($finManana);
+                    $minutosDisponiblesHoy += max(min($minutosManana, 210), 0);
+                }
 
-             while ($minutosAcumulados < $minutosNecesarios) {
-                 // Saltar fines de semana y feriados
-                 if ($fechaActual->isWeekend() || in_array($fechaActual->format('Y-m-d'), $feriados)) {
-                     $fechaActual->addDay()->setTime(8, 30);
-                     continue;
-                 }
+                if ($horaActual >= '12:00' && $horaActual < '13:00') {
+                    $fechaActual->setTime(13, 0);
+                }
 
-                 // Definir bloques de trabajo del día actual
-                 $inicioManana = $fechaActual->copy()->setTime(8, 30);
-                 $finManana    = $fechaActual->copy()->setTime(12, 0);
-                 $inicioTarde  = $fechaActual->copy()->setTime(13, 0);
-                 $finTarde     = $fechaActual->copy()->setTime(17, 0);
+                if ($fechaActual->format('H:i') >= '13:00' && $fechaActual->format('H:i') < '17:00') {
+                    $finTarde = $fechaActual->copy()->setTime(17, 0);
+                    $minutosTarde = $fechaActual->diffInMinutes($finTarde);
+                    $minutosDisponiblesHoy += max(min($minutosTarde, 240), 0);
+                }
 
-                 $minutosPorAsignarEsteCiclo = $minutosNecesarios - $minutosAcumulados; // Minutos que aún faltan
+                if ($minutosDisponiblesHoy <= 0) {
+                    $fechaActual->addDay()->setTime(8, 30);
+                    continue;
+                }
 
-                 // --- Mañana (08:30 - 12:00) ---
-                 if ($fechaActual->lt($finManana)) { // Si la hora actual es antes de las 12:00
-                      // Asegurarse que no empiece antes de las 8:30
-                     if ($fechaActual->lt($inicioManana)) {
-                         $fechaActual->setTime(8, 30);
-                     }
-                     $minutosDisponiblesBloque = $fechaActual->diffInMinutes($finManana);
-                     $minutosAUsar = min($minutosPorAsignarEsteCiclo, $minutosDisponiblesBloque);
+                if ($minutosRestantes <= $minutosDisponiblesHoy) {
+                    $horaFin = $fechaActual->copy()->addMinutes($minutosRestantes);
+                    $minutosRestantes = 0;
+                } else {
+                    $minutosRestantes -= $minutosDisponiblesHoy;
+                    $fechaActual->addDay()->setTime(8, 30);
+                }
+            }
 
-                     if ($minutosAUsar > 0) {
-                          $fechaActual->addMinutes($minutosAUsar);
-                          $minutosAcumulados += $minutosAUsar;
-                          $minutosPorAsignarEsteCiclo -= $minutosAUsar; // Actualizar lo que falta
-                          if ($minutosAcumulados >= $minutosNecesarios) break; // Terminado
-                     }
-                 }
+            return response()->json([
+                'fecha_fin' => $horaFin->copy()->format('Y-m-d'),
+                'hora_fin' => $horaFin->format('H:i')
+            ]);
 
-                 // --- Saltar Almuerzo (12:00 - 13:00) ---
-                 if ($fechaActual->format('H:i') >= '12:00' && $fechaActual->format('H:i') < '13:00') {
-                     $fechaActual->setTime(13, 0);
-                 }
-
-                 // --- Tarde (13:00 - 17:00) ---
-                 if ($fechaActual->lt($finTarde)) { // Si la hora actual es antes de las 17:00
-                     // Asegurarse que no empiece antes de las 13:00 (ya lo hicimos antes, pero por si acaso)
-                     if ($fechaActual->lt($inicioTarde)) {
-                          $fechaActual->setTime(13, 0);
-                     }
-                     $minutosDisponiblesBloque = $fechaActual->diffInMinutes($finTarde);
-                     $minutosAUsar = min($minutosPorAsignarEsteCiclo, $minutosDisponiblesBloque);
-
-                     if ($minutosAUsar > 0) {
-                         $fechaActual->addMinutes($minutosAUsar);
-                         $minutosAcumulados += $minutosAUsar;
-                         // $minutosPorAsignarEsteCiclo -= $minutosAUsar; // No necesario actualizar aquí si ya salimos
-                         if ($minutosAcumulados >= $minutosNecesarios) break; // Terminado
-                     }
-                 }
-
-                 // --- Pasar al día siguiente si no hemos terminado ---
-                  if ($minutosAcumulados < $minutosNecesarios) {
-                      $fechaActual->addDay()->setTime(8, 30);
-                  }
-
-             } // Fin del while
-
-             // $fechaActual ahora contiene la fecha y hora exactas de finalización
-             return response()->json([
-                 'fecha_fin' => $fechaActual->format('Y-m-d'),
-                 'hora_fin' => $fechaActual->format('H:i')
-             ]);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning("Error de validación al calcular fecha fin (API): " . json_encode($e->errors()));
-            return response()->json(['error' => 'Datos inválidos para calcular fecha.', 'details' => $e->errors()], 422);
         } catch (\Exception $e) {
-            Log::error("Error al calcular fecha fin (API): " . $e->getMessage() . " Line: " . $e->getLine() . " Data: " . json_encode($request->all()));
-            return response()->json(['error' => 'No se pudo procesar el cálculo de fecha.'], 500);
+            Log::error("Error al calcular fecha fin (API): " . $e->getMessage());
+            return response()->json(['error' => 'No se pudo calcular la fecha de finalización'], 500);
         }
     }
 
@@ -209,7 +168,6 @@ class ProgramacionController extends Controller
                     'extendedProps' => [
                         'grupo' => $ocupacion->grupo?->nombre ?? 'N/A',
                         'coordinacion' => $ocupacion->grupo?->coordinacion?->nombre ?? 'N/A',
-                        'color' => $colorCoord, 
                         'fecha_inicio_fmt' => $fechaInicioFmt,
                         'fecha_fin_fmt' => $fechaFinFmt,
                         'hora_inicio_fmt' => $horaInicioFmt,

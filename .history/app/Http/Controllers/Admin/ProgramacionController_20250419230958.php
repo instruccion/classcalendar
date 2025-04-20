@@ -65,7 +65,7 @@ class ProgramacionController extends Controller
 
             $fechaInicio = Carbon::parse($validated['inicio'] . ' ' . $validated['hora_inicio']);
             $duracionHorasAcademicas = $validated['horas'];
-            $minutosTotalesRequeridos = $duracionHorasAcademicas * 50;
+            $minutosTotalesRequeridos = $duracionHorasAcademicas * 45;
 
             // Asegurarse que la hora de inicio sea válida (dentro del horario laboral)
              if ($fechaInicio->format('H:i') < '08:30') {
@@ -209,7 +209,6 @@ class ProgramacionController extends Controller
                     'extendedProps' => [
                         'grupo' => $ocupacion->grupo?->nombre ?? 'N/A',
                         'coordinacion' => $ocupacion->grupo?->coordinacion?->nombre ?? 'N/A',
-                        'color' => $colorCoord, 
                         'fecha_inicio_fmt' => $fechaInicioFmt,
                         'fecha_fin_fmt' => $fechaFinFmt,
                         'hora_inicio_fmt' => $horaInicioFmt,
