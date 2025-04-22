@@ -36,45 +36,58 @@
 
         
         <div class="bg-white p-4 rounded shadow-md mb-4">
-            <form method="GET" action="<?php echo e(route('admin.programaciones.index')); ?>" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <?php if(auth()->user()->esAdministrador() && is_null(auth()->user()->coordinacion_id)): ?>
-                    <div class="md:col-span-1">
-                        <label for="coordinacion_id" class="block text-sm text-gray-700 mb-1">Coordinación</label>
-                        <select name="coordinacion_id" id="coordinacion_id" class="w-full border px-4 py-2 rounded min-w-[19rem] text-sm" onchange="this.form.submit()">
-                            <option value="">Todas</option>
-                            <?php $__currentLoopData = $coordinaciones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coordinacion): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($coordinacion->id); ?>" <?php echo e(request('coordinacion_id') == $coordinacion->id ? 'selected' : ''); ?>>
-                                    <?php echo e($coordinacion->nombre); ?>
 
-                                </option>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </select>
-                    </div>
-                <?php endif; ?>
 
-                <div class="md:col-span-1">
-                    <label for="grupo_id" class="block text-sm text-gray-700 mb-1">Grupo</label>
-                    <select name="grupo_id" id="grupo_id" class="w-full border px-4 py-2 rounded min-w-[19rem] text-sm" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <?php $__currentLoopData = $grupos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($grupo->id); ?>" <?php echo e(request('grupo_id') == $grupo->id ? 'selected' : ''); ?>>
-                                <?php echo e($grupo->nombre); ?>
+        <form method="GET" action="<?php echo e(route('admin.programaciones.index')); ?>"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+
+            <?php if(auth()->user()->esAdministrador() && is_null(auth()->user()->coordinacion_id)): ?>
+                <div class="min-w-0">
+                    <label for="coordinacion_id" class="block text-sm text-gray-700 mb-1">Coordinación</label>
+                    <select name="coordinacion_id" id="coordinacion_id"
+                        class="w-full max-w-[20rem] border px-4 py-2 rounded text-sm"
+                        onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        <?php $__currentLoopData = $coordinaciones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coordinacion): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($coordinacion->id); ?>" <?php echo e(request('coordinacion_id') == $coordinacion->id ? 'selected' : ''); ?>>
+                                <?php echo e($coordinacion->nombre); ?>
 
                             </option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
+            <?php endif; ?>
 
-                <div class="md:col-span-1 flex items-end">
-                    <div class="relative w-full">
-                        <input type="text" name="buscar" id="buscar" placeholder="Buscar" value="<?php echo e(request('buscar')); ?>"
-                            class="w-full border px-4 py-2 pl-4 pr-10 rounded-full text-sm" />
-                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                            <i class="mdi mdi-magnify"></i>
-                        </button>
-                    </div>
+            <div class="min-w-0">
+                <label for="grupo_id" class="block text-sm text-gray-700 mb-1">Grupo</label>
+                <select name="grupo_id" id="grupo_id"
+                    class="w-full max-w-[24rem] border px-4 py-2 rounded text-sm"
+                    onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    <?php $__currentLoopData = $grupos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($grupo->id); ?>" <?php echo e(request('grupo_id') == $grupo->id ? 'selected' : ''); ?>>
+                            <?php echo e($grupo->nombre); ?>
+
+                        </option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+            </div>
+
+            <div class="min-w-0 flex justify-start lg:justify-end">
+                <div class="relative w-full max-w-[20rem]">
+                    <input type="text" name="buscar" id="buscar" placeholder="Buscar" value="<?php echo e(request('buscar')); ?>"
+                        class="w-full border px-4 py-2 pr-10 pl-4 rounded-full text-sm" />
+                    <button type="submit"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                        <i class="mdi mdi-magnify"></i>
+                    </button>
                 </div>
-            </form>
+            </div>
+        </form>
+
+
+
+
         </div>
 
         

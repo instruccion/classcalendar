@@ -256,7 +256,9 @@
                          if (!this.selectedCourseId) { alert('Seleccione Curso.'); return; }
                          if (!this.startDate) { alert('Seleccione Fecha Inicio.'); return; }
                          if (!this.endDate) { alert('Falta Fecha Fin.'); return; }
-                         if (!this.selectedAulaId) { alert('Seleccione Aula.'); return; }
+                         if (!this.selectedAulaId) {
+                                console.warn('Advertencia: No se asignó aula a esta programación.');
+                            }
                          if (!this.selectedInstructorId) {
                                 console.warn('Advertencia: No se asignó instructor a esta programación.');
                             }
@@ -296,7 +298,7 @@
             
             <div class="flex justify-between items-center mb-6 pb-2 border-b">
                 <h1 class="text-2xl font-bold">Programar Curso</h1>
-                <a href="<?php echo e(route('admin.programaciones.bloque.show')); ?>" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
+                <a href="<?php echo e(route('admin.programaciones.bloque.index')); ?>" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
                     📦 Programar por Bloque
                 </a>
             </div>
@@ -384,7 +386,7 @@
                  <div class="border-t pt-4 mt-2">
                      <label for="aula_id" class="block font-semibold mb-1">Aula <span class="text-red-500">*</span></label>
                      <div class="flex gap-2 items-center">
-                         <select name="aula_id" id="aula_id" required x-model="selectedAulaId" @change="checkAvailability('aula')" class="w-full border px-4 py-2 rounded bg-white focus:border-indigo-500 focus:ring-indigo-500" :class="{ 'border-red-500 text-red-600 font-bold': aulaOccupied }">
+                         <select name="aula_id" id="aula_id" x-model="selectedAulaId" @change="checkAvailability('aula')" class="w-full border px-4 py-2 rounded bg-white focus:border-indigo-500 focus:ring-indigo-500" :class="{ 'border-red-500 text-red-600 font-bold': aulaOccupied }">
                              <option value="">Seleccione un aula...</option>
                              <template x-for="aula in aulasActivas" :key="aula.id">
                                  <option :value="aula.id" x-text="aula.nombre + (aula.lugar ? ` – ${aula.lugar}` : '')"></option>
@@ -479,6 +481,7 @@
         </dialog>
 
     </div> 
+
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
