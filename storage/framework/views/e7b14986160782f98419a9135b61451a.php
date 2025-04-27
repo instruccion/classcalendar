@@ -11,17 +11,13 @@
             <input type="hidden" name="id" id="curso_edit_id">
 
             <!-- Grupo(s) -->
-            <div class="col-span-12" id="curso_edit_grupos">
+            <div class="col-span-12">
                 <label class="block font-semibold mb-1">Asignar a Grupo(s)</label>
-                <?php $__currentLoopData = $gruposTodos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $g): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <label class="inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="grupo_ids[]" value="<?php echo e($g->id); ?>"
-                               class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out">
-                        <?php echo e($g->nombre); ?>
-
-                    </label>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <div id="curso_edit_grupos" class="flex flex-wrap gap-3">
+                    <!-- Aquí se inyectarán los checkboxes vía JS -->
+                </div>
             </div>
+
 
             <!-- Nombre -->
             <div class="col-span-12 md:col-span-6">

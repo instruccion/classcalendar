@@ -38,54 +38,54 @@
                     showEndDateToast: false,
 
                     calculateEndDate() {
-                        this.endDate = ''; this.endTime = '';
-                        this.calculatedEndDateText = ''; this.showEndDateToast = false;
-                        const duration = this.selectedCourseDuration ?? config.duracion_horas;
-                        console.log(`Alpine: calculateEndDate - Inicio=${this.startDate}, Duración=${duration}, HoraInicio=${this.startTime}`);
-                        if (!this.startDate || !duration || duration <= 0) {
-                            console.log("Alpine: calculateEndDate - Faltan datos."); return;
+                    this.endDate = ''; this.endTime = '';
+                    this.calculatedEndDateText = ''; this.showEndDateToast = false;
+                    const duration = this.selectedCourseDuration ?? config.duracion_horas;
+                    console.log(`Alpine: calculateEndDate - Inicio=${this.startDate}, Duración=${duration}, HoraInicio=${this.startTime}`);
+                    if (!this.startDate || !duration || duration <= 0) {
+                        console.log("Alpine: calculateEndDate - Faltan datos."); return;
+                    }
+                    this.isLoadingEndDate = true;
+                    fetch(config.ruta_calculo, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': this.csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            inicio: this.startDate,
+                            horas: duration,
+                            hora_inicio: this.startTime
+                        })
+                    })
+                    .then(res => res.ok ? res.json() : res.json().then(err => { throw new Error(err.error || `Error HTTP ${res.status}`) }))
+                    .then(data => {
+                        console.log("Alpine: calculateEndDate - Datos JSON:", data);
+                        if (data.fecha_fin && data.hora_fin) {
+                            this.endDate = data.fecha_fin;
+                            this.endTime = data.hora_fin;
+                            this.calculatedEndDateText = `${data.fecha_fin} ${data.hora_fin}`;
+                            this.showEndDateToast = true;
+                            console.log("Alpine: calculateEndDate - Fechas/Horas OK:", this.endDate, this.endTime);
+                            setTimeout(() => this.showEndDateToast = false, 3500);
+                        } else {
+                            console.error("Alpine: calculateEndDate - Respuesta inesperada:", data);
+                            alert("No se pudo calcular fecha/hora fin.");
                         }
-                        this.isLoadingEndDate = true;
-                        fetch(config.ruta_calculo, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': this.csrfToken,
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                inicio: this.startDate,
-                                horas: duration,
-                                hora_inicio: this.startTime
-                            })
-                        })
-                        .then(res => res.ok ? res.json() : res.json().then(err => { throw new Error(err.error || `Error HTTP ${res.status}`) }))
-                        .then(data => {
-                            console.log("Alpine: calculateEndDate - Datos JSON:", data);
-                            if (data.fecha_fin && data.hora_fin) {
-                                this.endDate = data.fecha_fin;
-                                this.endTime = data.hora_fin;
-                                this.calculatedEndDateText = `${data.fecha_fin} ${data.hora_fin}`;
-                                this.showEndDateToast = true;
-                                console.log("Alpine: calculateEndDate - Fechas/Horas OK:", this.endDate, this.endTime);
-                                setTimeout(() => this.showEndDateToast = false, 3500);
-                            } else {
-                                console.error("Alpine: calculateEndDate - Respuesta inesperada:", data);
-                                alert("No se pudo calcular fecha/hora fin.");
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Alpine: calculateEndDate ERROR fetch:", error);
-                            alert(`Error calculando fecha fin: ${error.message}`);
-                            this.endDate = ''; this.endTime = '';
-                        })
-                        .finally(() => {
-                            this.isLoadingEndDate = false;
-                            console.log("Alpine: calculateEndDate - Fin. Verificando disponibilidad...");
-                            this.checkAvailability?.('instructor');
-                            this.checkAvailability?.('aula');
-                        });
-                    },
+                    })
+                    .catch(error => {
+                        console.error("Alpine: calculateEndDate ERROR fetch:", error);
+                        alert(`Error calculando fecha fin: ${error.message}`);
+                        this.endDate = ''; this.endTime = '';
+                    })
+                    .finally(() => {
+                        this.isLoadingEndDate = false;
+                        console.log("Alpine: calculateEndDate - Fin. Verificando disponibilidad...");
+                        this.checkAvailability?.('instructor');
+                        this.checkAvailability?.('aula');
+                    });
+                },
 
 
                     validateBeforeSubmit(event) {

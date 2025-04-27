@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+    .fc-event {
+        font-size: 0.75rem;
+        padding: 2px 4px;
+        border-radius: 0.25rem;
+    }

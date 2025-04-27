@@ -115,24 +115,32 @@
         class="fixed top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-300 p-4 z-40 transition-transform duration-300 ease-in-out transform hidden lg:block lg:translate-x-0">
         <h2 class="text-xl font-bold mb-6">Menú</h2>
         <nav class="flex flex-col gap-3 text-sm">
-            
-            <a href="<?php echo e(route('calendario.index')); ?>" class="hover:underline text-gray-800">📅 Calendario</a>
-            <a href="<?php echo e(route('admin.programaciones.index')); ?>" class="hover:underline text-gray-800">📦 Programaciones</a>
-            <a href="<?php echo e(route('agenda.index')); ?>" class="hover:underline text-gray-800">🗓️ Agenda</a>
-            <a href="<?php echo e(route('admin.grupos.index')); ?>" class="hover:underline text-gray-800"> 👥 Grupos </a>
-            <a href="<?php echo e(route('admin.cursos.index')); ?>" class="hover:underline text-gray-800">📘 Cursos</a>
-            <a href="<?php echo e(route('admin.aulas.index')); ?>" class="hover:underline text-gray-800">🏫 Aulas</a>
-            <a href="<?php echo e(route('admin.instructores.index')); ?>" class="hover:underline text-gray-800">🧑‍🏫 Instructores</a>
+            <?php $rol = auth()->user()?->rol; ?>
 
+            <?php if($rol === 'instructor'): ?>
+                
+                <a href="<?php echo e(route('mi-agenda')); ?>" class="hover:underline text-gray-800">🗓️ Mi Agenda</a>
 
-             
-            <?php if(auth()->user()?->rol === 'administrador'): ?>
-                <a href="<?php echo e(route('admin.coordinaciones.index')); ?>" class="hover:underline text-gray-800">📍 Coordinaciones</a>
-                <a href="<?php echo e(route('admin.users.index')); ?>" class="hover:underline text-gray-800">👤 Usuarios</a>
-                <a href="<?php echo e(route('admin.feriados.index')); ?>" class="hover:underline text-gray-800">📅 Días Feriados</a>
-                <a href="<?php echo e(route('admin.auditorias.index')); ?>" class="hover:underline text-gray-800">📋 Auditorías</a>
+            <?php else: ?>
+                
+                <a href="<?php echo e(route('calendario.index')); ?>" class="hover:underline text-gray-800">📅 Calendario</a>
+                <a href="<?php echo e(route('admin.programaciones.index')); ?>" class="hover:underline text-gray-800">📦 Programaciones</a>
+                <a href="<?php echo e(route('admin.grupos.index')); ?>" class="hover:underline text-gray-800">👥 Grupos</a>
+                <a href="<?php echo e(route('admin.cursos.index')); ?>" class="hover:underline text-gray-800">📘 Cursos</a>
+                <a href="<?php echo e(route('admin.aulas.index')); ?>" class="hover:underline text-gray-800">🏫 Aulas</a>
+                <a href="<?php echo e(route('admin.instructores.index')); ?>" class="hover:underline text-gray-800">🧑‍🏫 Instructores</a>
+
+                
+                <?php if($rol === 'administrador'): ?>
+                    <a href="<?php echo e(route('admin.instructores.agenda')); ?>" class="hover:underline text-gray-800">📅 Agenda de Instructores</a>
+                    <a href="<?php echo e(route('admin.coordinaciones.index')); ?>" class="hover:underline text-gray-800">📍 Coordinaciones</a>
+                    <a href="<?php echo e(route('admin.users.index')); ?>" class="hover:underline text-gray-800">👤 Usuarios</a>
+                    <a href="<?php echo e(route('admin.feriados.index')); ?>" class="hover:underline text-gray-800">📅 Días Feriados</a>
+                    <a href="<?php echo e(route('admin.auditorias.index')); ?>" class="hover:underline text-gray-800">📋 Auditorías</a>
+                <?php endif; ?>
             <?php endif; ?>
         </nav>
+
     </aside>
 
     
@@ -262,9 +270,7 @@
             }
         });
     </script>
-
-
-
+<?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html>
 <?php /**PATH C:\wamp64\www\cursoslaser\resources\views/layouts/app.blade.php ENDPATH**/ ?>

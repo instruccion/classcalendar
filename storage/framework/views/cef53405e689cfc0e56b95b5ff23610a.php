@@ -39,7 +39,7 @@
         </div>
 
         
-        <?php if(auth()->user()->rol === 'administrador'): ?>
+        <?php if(auth()->user()->rol === 'administrador' && is_null(auth()->user()->coordinacion_id)): ?>
             <form method="GET" action="<?php echo e(route('admin.grupos.index')); ?>" class="mb-4 max-w-sm">
                 <label for="coordinacion_id" class="block font-semibold mb-1">Filtrar por Coordinación:</label>
                 <select name="coordinacion_id" id="coordinacion_id" onchange="this.form.submit()" class="w-full border px-4 py-2 rounded">

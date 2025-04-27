@@ -23,7 +23,8 @@
 
         <!-- Filtros -->
         <form method="GET" class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <?php if($usuario->rol === 'administrador'): ?>
+            <?php if($usuario->rol === 'administrador' && is_null($usuario->coordinacion_id)): ?>
+
                 <div>
                     <label for="coordinacion" class="block text-sm font-medium text-gray-700">Coordinación</label>
                     <select id="coordinacion" name="coordinacion_id" class="mt-1 block w-full border rounded px-3 py-2">
@@ -133,13 +134,30 @@
                 document.getElementById('curso_edit_duracion').value = data.duracion_horas;
                 document.getElementById('curso_edit_descripcion').value = data.descripcion ?? '';
 
-                document.querySelectorAll('#curso_edit_grupos input[type=checkbox]').forEach(cb => cb.checked = false);
-                if (Array.isArray(data.grupo_ids)) {
-                    data.grupo_ids.forEach(id => {
-                        const checkbox = document.querySelector(`#curso_edit_grupos input[value="${id}"]`);
-                        if (checkbox) checkbox.checked = true;
-                    });
-                }
+                const grupoContainer = document.getElementById('curso_edit_grupos');
+                grupoContainer.innerHTML = ''; // Limpiar los checkboxes anteriores
+
+                if (Array.isArray(data.todos_grupos)) {
+                    data.todos_grupos.forEach(grupo => {
+                        const label = document.createElement('label');
+                        label.className = 'inline-flex items-center gap-2 text-sm';
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                    checkbox.name = 'grupo_ids[]';
+                    checkbox.value = grupo.id;
+                    checkbox.className = 'form-checkbox h-4 w-4 text-indigo-600';
+
+                    if (data.grupo_ids.includes(grupo.id)) {
+                        checkbox.checked = true;
+                    }
+
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(grupo.nombre));
+                    grupoContainer.appendChild(label);
+                });
+            }
+
 
                 document.getElementById('formEditarCurso').action = `${BASE_URL_EDITAR_CURSO}/${cursoId}`;
                 document.getElementById('modalEditarCurso').showModal();

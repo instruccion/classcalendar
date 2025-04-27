@@ -95,7 +95,20 @@
             <?php $__empty_1 = true; $__currentLoopData = $programacionesAgrupadas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupoNombre => $bloques): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <div class="px-4 py-2 bg-green-50 font-semibold border-b border-green-200">Grupo: <?php echo e($grupoNombre); ?></div>
                 <?php $__currentLoopData = $bloques; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bloqueCodigo => $items): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div class="px-4 py-2 text-sm bg-gray-50 border-b text-gray-700">Bloque: <?php echo e($bloqueCodigo ?: '—'); ?></div>
+                <div class="px-4 py-2 text-sm bg-gray-50 border-b text-gray-700 flex justify-between items-center"> 
+                    <div> 
+                        <span class="font-semibold italic underline">Bloque:</span>
+                        <span class="italic underline"><?php echo e($bloqueCodigo ?: '—'); ?></span>
+                    </div>
+                    <div> 
+                        
+                        <a href="<?php echo e(route('admin.programaciones.bloque.edit', ['grupo' => $items->first()->grupo_id, 'bloque_codigo' => $bloqueCodigo ?: '_sin_codigo_'])); ?>" 
+                        class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-2 py-1 rounded shadow">
+                        <i class="mdi mdi-pencil"></i> Editar Bloque
+                        </a>
+                    </div>
+                </div>
+                </div>
                     <table class="w-full table-auto text-sm">
                         <thead class="bg-gray-100">
                             <tr>
