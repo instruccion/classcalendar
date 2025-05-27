@@ -36,111 +36,116 @@
 
         
         <div class="bg-white p-4 rounded shadow-md mb-4">
+            <form method="GET" action="<?php echo e(route('admin.programaciones.index')); ?>" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                <?php if(auth()->user()->esAdministrador() && is_null(auth()->user()->coordinacion_id)): ?>
+                    <div class="min-w-0">
+                        <label for="coordinacion_id" class="block text-sm text-gray-700 mb-1">Coordinación</label>
+                        <select name="coordinacion_id" id="coordinacion_id" class="w-full max-w-[20rem] border px-4 py-2 rounded text-sm" onchange="this.form.submit()">
+                            <option value="">Todas</option>
+                            <?php $__currentLoopData = $coordinaciones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coordinacion): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($coordinacion->id); ?>" <?php echo e(request('coordinacion_id') == $coordinacion->id ? 'selected' : ''); ?>>
+                                    <?php echo e($coordinacion->nombre); ?>
 
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
 
-        <form method="GET" action="<?php echo e(route('admin.programaciones.index')); ?>"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
-
-            <?php if(auth()->user()->esAdministrador() && is_null(auth()->user()->coordinacion_id)): ?>
                 <div class="min-w-0">
-                    <label for="coordinacion_id" class="block text-sm text-gray-700 mb-1">Coordinación</label>
-                    <select name="coordinacion_id" id="coordinacion_id"
-                        class="w-full max-w-[20rem] border px-4 py-2 rounded text-sm"
-                        onchange="this.form.submit()">
-                        <option value="">Todas</option>
-                        <?php $__currentLoopData = $coordinaciones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coordinacion): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($coordinacion->id); ?>" <?php echo e(request('coordinacion_id') == $coordinacion->id ? 'selected' : ''); ?>>
-                                <?php echo e($coordinacion->nombre); ?>
+                    <label for="grupo_id" class="block text-sm text-gray-700 mb-1">Grupo</label>
+                    <select name="grupo_id" id="grupo_id" class="w-full max-w-[24rem] border px-4 py-2 rounded text-sm" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <?php $__currentLoopData = $grupos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($grupo->id); ?>" <?php echo e(request('grupo_id') == $grupo->id ? 'selected' : ''); ?>>
+                                <?php echo e($grupo->nombre); ?>
 
                             </option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
-            <?php endif; ?>
 
-            <div class="min-w-0">
-                <label for="grupo_id" class="block text-sm text-gray-700 mb-1">Grupo</label>
-                <select name="grupo_id" id="grupo_id"
-                    class="w-full max-w-[24rem] border px-4 py-2 rounded text-sm"
-                    onchange="this.form.submit()">
-                    <option value="">Todos</option>
-                    <?php $__currentLoopData = $grupos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($grupo->id); ?>" <?php echo e(request('grupo_id') == $grupo->id ? 'selected' : ''); ?>>
-                            <?php echo e($grupo->nombre); ?>
-
-                        </option>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </select>
-            </div>
-
-            <div class="min-w-0 flex justify-start lg:justify-end">
-                <div class="relative w-full max-w-[20rem]">
-                    <input type="text" name="buscar" id="buscar" placeholder="Buscar" value="<?php echo e(request('buscar')); ?>"
-                        class="w-full border px-4 py-2 pr-10 pl-4 rounded-full text-sm" />
-                    <button type="submit"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                        <i class="mdi mdi-magnify"></i>
-                    </button>
+                <div class="min-w-0 flex justify-start lg:justify-end">
+                    <div class="relative w-full max-w-[20rem]">
+                        <input type="text" name="buscar" id="buscar" placeholder="Buscar" value="<?php echo e(request('buscar')); ?>"
+                               class="w-full border px-4 py-2 pr-10 pl-4 rounded-full text-sm" />
+                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                            <i class="mdi mdi-magnify"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
-
-
-
-
+            </form>
         </div>
 
         
         <div class="bg-white rounded shadow overflow-x-auto">
-            <?php $__empty_1 = true; $__currentLoopData = $programacionesAgrupadas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupoNombre => $bloques): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                <div class="px-4 py-2 bg-green-50 font-semibold border-b border-green-200">Grupo: <?php echo e($grupoNombre); ?></div>
-                <?php $__currentLoopData = $bloques; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bloqueCodigo => $items): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="px-4 py-2 text-sm bg-gray-50 border-b text-gray-700 flex justify-between items-center"> 
-                    <div> 
-                        <span class="font-semibold italic underline">Bloque:</span>
-                        <span class="italic underline"><?php echo e($bloqueCodigo ?: '—'); ?></span>
-                    </div>
-                    <div> 
+            <table class="w-full table-auto text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left">Curso</th>
+                        <th class="px-4 py-2 text-left">Tipo</th>
+                        <th class="px-4 py-2 text-left">Duración</th>
+                        <th class="px-4 py-2 text-left">Fecha Inicio</th> 
+                        <th class="px-4 py-2 text-left">Fecha Fin</th>    
+                        <th class="px-4 py-2 text-left">Aula</th>
+                        <th class="px-4 py-2 text-left">Instructor</th>
+                        <th class="px-4 py-2 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $__empty_1 = true; $__currentLoopData = $programacionesAgrupadas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grupoNombre => $bloques): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         
-                        <a href="<?php echo e(route('admin.programaciones.bloque.edit', ['grupo' => $items->first()->grupo_id, 'bloque_codigo' => $bloqueCodigo ?: '_sin_codigo_'])); ?>" 
-                        class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-2 py-1 rounded shadow">
-                        <i class="mdi mdi-pencil"></i> Editar Bloque
-                        </a>
-                    </div>
-                </div>
-                </div>
-                    <table class="w-full table-auto text-sm">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-4 py-2 text-left">Curso</th>
-                                <th class="px-4 py-2 text-left">Tipo</th>
-                                <th class="px-4 py-2 text-left">Duración</th>
-                                <th class="px-4 py-2 text-left">Aula</th>
-                                <th class="px-4 py-2 text-left">Instructor</th>
-                                <th class="px-4 py-2 text-left">Acciones</th>
+                        <tr class="bg-green-50 font-semibold border-t border-green-200">
+                            <td colspan="8" class="px-4 py-2">Grupo: <?php echo e($grupoNombre); ?></td> 
+                        </tr>
+
+                        <?php $__currentLoopData = $bloques; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bloqueCodigo => $items): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            
+                            <tr class="bg-gray-50 text-gray-700 border-t">
+                                <td colspan="8" class="flex justify-between items-center px-4 py-2">
+                                    <div>
+                                        <span class="font-semibold italic underline">Bloque:</span>
+                                        <span class="italic underline"><?php echo e($bloqueCodigo ?: '—'); ?></span>
+                                    </div>
+                                    <div>
+                                        <a href="<?php echo e(route('admin.programaciones.bloque.edit', ['grupo' => $items->first()->grupo_id, 'bloque_codigo' => $bloqueCodigo ?: '_sin_codigo_'])); ?>"
+                                           class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-2 py-1 rounded shadow">
+                                            <i class="mdi mdi-pencil"></i> Editar Bloque
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
+
+                            
                             <?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $programacion): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="border-t">
                                     <td class="px-4 py-2"><?php echo e($programacion->curso->nombre); ?></td>
                                     <td class="px-4 py-2"><?php echo e(ucfirst($programacion->curso->tipo ?? '-')); ?></td>
                                     <td class="px-4 py-2"><?php echo e($programacion->curso->duracion_horas); ?>h</td>
+                                    <td class="px-4 py-2"><?php echo e($programacion->fecha_inicio?->format('d/m/Y') ?? '—'); ?></td> 
+                                    <td class="px-4 py-2"><?php echo e($programacion->fecha_fin?->format('d/m/Y') ?? '—'); ?></td>     
                                     <td class="px-4 py-2"><?php echo e($programacion->aula->nombre ?? '-'); ?></td>
                                     <td class="px-4 py-2">
                                         <?php if($programacion->instructor): ?>
-                                            <a href="mailto:<?php echo e($programacion->instructor->correo); ?>" class="text-[#00AF40] hover:underline">
-                                                <?php echo e($programacion->instructor->nombre); ?>
+                                            <div class="flex items-center gap-2">
+                                                <a href="mailto:<?php echo e($programacion->instructor->correo); ?>" class="text-[#00AF40] hover:underline">
+                                                    <?php echo e($programacion->instructor->nombre); ?>
 
-                                            </a>
+                                                </a>
+                                                <form method="POST" action="<?php echo e(route('admin.programaciones.enviarCorreo', $programacion)); ?>">
+                                                    <?php echo csrf_field(); ?>
+                                                    <button type="submit" title="Enviar correo al instructor" class="text-blue-600 hover:text-blue-800 text-sm">
+                                                        <i class="mdi mdi-email-outline text-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         <?php else: ?>
                                             <span class="text-gray-500">—</span>
                                         <?php endif; ?>
                                     </td>
+
                                     <td class="px-4 py-2 flex gap-2">
-                                    <a href="<?php echo e(route('admin.programaciones.edit', $programacion)); ?>" class="text-[#00AF40] hover:underline text-sm">Editar</a>
-
-
+                                        <a href="<?php echo e(route('admin.programaciones.edit', $programacion)); ?>" class="text-[#00AF40] hover:underline text-sm">Editar</a>
                                         <form action="<?php echo e(route('admin.programaciones.destroy', $programacion)); ?>" method="POST" onsubmit="return confirm('¿Eliminar esta programación?')">
                                             <?php echo csrf_field(); ?>
                                             <?php echo method_field('DELETE'); ?>
@@ -149,12 +154,14 @@
                                     </td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </tbody>
-                    </table>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <div class="px-4 py-6 text-center text-gray-500">No hay programaciones disponibles.</div>
-            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <tr>
+                            <td colspan="8" class="px-4 py-6 text-center text-gray-500">No hay programaciones disponibles.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
 
         <div class="mt-4">

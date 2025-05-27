@@ -89,10 +89,11 @@
                     </div>
                     <?php
                          // RECOMENDACIÓN: Mover a accesor User->profile_photo_url
-                        $foto = Auth::user()->foto ?? null;
-                        $fotoPerfil = $foto && file_exists(public_path("uploads/$foto"))
-                                        ? asset("uploads/$foto")
-                                        : asset("assets/images/users/avatar-default.png");
+                        $foto = Auth::user()->foto_perfil ?? null;
+                        $fotoPerfil = $foto && file_exists(public_path("assets/images/users/$foto"))
+                            ? asset("assets/images/users/$foto") . '?v=' . filemtime(public_path("assets/images/users/$foto"))
+                            : asset("assets/images/users/avatar-default.png");
+
                     ?>
                     <img src="<?php echo e($fotoPerfil); ?>" class="w-10 h-10 rounded-full object-cover border" alt="Avatar">
                 </div>
@@ -115,30 +116,32 @@
         class="fixed top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-300 p-4 z-40 transition-transform duration-300 ease-in-out transform hidden lg:block lg:translate-x-0">
         <h2 class="text-xl font-bold mb-6">Menú</h2>
         <nav class="flex flex-col gap-3 text-sm">
-            <?php $rol = auth()->user()?->rol; ?>
+        <?php
+            $user = auth()->user();
+            $rol = $user?->rol;
+            $esInstructor = $user?->instructor !== null;
+        ?>
 
-            <?php if($rol === 'instructor'): ?>
-                
-                <a href="<?php echo e(route('mi-agenda')); ?>" class="hover:underline text-gray-800">🗓️ Mi Agenda</a>
+        <?php if($rol === 'instructor' && !$esInstructor): ?>
+            
+            <a href="<?php echo e(route('instructores.agenda')); ?>" class="hover:underline text-gray-800">🗓️ Mi Agenda</a>
+        <?php else: ?>
+            
+            <a href="<?php echo e(route('calendario.index')); ?>" class="hover:underline text-gray-800">📅 Calendario</a>
+            <a href="<?php echo e(route('admin.programaciones.index')); ?>" class="hover:underline text-gray-800">📦 Programaciones</a>
+            <a href="<?php echo e(route('admin.grupos.index')); ?>" class="hover:underline text-gray-800">👥 Grupos</a>
+            <a href="<?php echo e(route('admin.cursos.index')); ?>" class="hover:underline text-gray-800">📘 Cursos</a>
+            <a href="<?php echo e(route('admin.aulas.index')); ?>" class="hover:underline text-gray-800">🏫 Aulas</a>
+            <a href="<?php echo e(route('admin.instructores.index')); ?>" class="hover:underline text-gray-800">🧑‍🏫 Instructores</a>
 
-            <?php else: ?>
-                
-                <a href="<?php echo e(route('calendario.index')); ?>" class="hover:underline text-gray-800">📅 Calendario</a>
-                <a href="<?php echo e(route('admin.programaciones.index')); ?>" class="hover:underline text-gray-800">📦 Programaciones</a>
-                <a href="<?php echo e(route('admin.grupos.index')); ?>" class="hover:underline text-gray-800">👥 Grupos</a>
-                <a href="<?php echo e(route('admin.cursos.index')); ?>" class="hover:underline text-gray-800">📘 Cursos</a>
-                <a href="<?php echo e(route('admin.aulas.index')); ?>" class="hover:underline text-gray-800">🏫 Aulas</a>
-                <a href="<?php echo e(route('admin.instructores.index')); ?>" class="hover:underline text-gray-800">🧑‍🏫 Instructores</a>
-
-                
-                <?php if($rol === 'administrador'): ?>
-                    <a href="<?php echo e(route('admin.instructores.agenda')); ?>" class="hover:underline text-gray-800">📅 Agenda de Instructores</a>
-                    <a href="<?php echo e(route('admin.coordinaciones.index')); ?>" class="hover:underline text-gray-800">📍 Coordinaciones</a>
-                    <a href="<?php echo e(route('admin.users.index')); ?>" class="hover:underline text-gray-800">👤 Usuarios</a>
-                    <a href="<?php echo e(route('admin.feriados.index')); ?>" class="hover:underline text-gray-800">📅 Días Feriados</a>
-                    <a href="<?php echo e(route('admin.auditorias.index')); ?>" class="hover:underline text-gray-800">📋 Auditorías</a>
-                <?php endif; ?>
+            <?php if($rol === 'administrador'): ?>
+                <a href="<?php echo e(route('admin.instructores.agenda')); ?>" class="hover:underline text-gray-800">📅 Agenda de Instructores</a>
+                <a href="<?php echo e(route('admin.coordinaciones.index')); ?>" class="hover:underline text-gray-800">📍 Coordinaciones</a>
+                <a href="<?php echo e(route('admin.users.index')); ?>" class="hover:underline text-gray-800">👤 Usuarios</a>
+                <a href="<?php echo e(route('admin.feriados.index')); ?>" class="hover:underline text-gray-800">📅 Días Feriados</a>
+                <a href="<?php echo e(route('admin.auditorias.index')); ?>" class="hover:underline text-gray-800">📋 Auditorías</a>
             <?php endif; ?>
+        <?php endif; ?>
         </nav>
 
     </aside>

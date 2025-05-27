@@ -1,0 +1,120 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{
+    Admin\ProgramacionController,
+    Admin\ProgramacionBloqueController,
+    ConfirmacionInstructorController,
+    MiAgendaController,
+    ProfileController,
+    UserController,
+    CalendarioController,
+    CoordinacionController,
+    CursoController,
+    AulaController,
+    AuditoriaController,
+    GrupoController,
+    FeriadoController,
+    InstructorController
+};
+
+// ---------------------- Rutas generales autenticadas ----------------------
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', [CalendarioController::class, 'index'])->name('calendario.index');
+    Route::get('/dashboard', fn () => view('dashboard'))->middleware('verified')->name('dashboard');
+
+    // Perfil usuario
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Eventos calendario
+    Route::get('/api/eventos', [CalendarioController::class, 'eventos']);
+
+    // Agenda de instructores (acceso propio)
+    Route::middleware('role:instructor')->group(function () {
+        Route::view('/mi-agenda', 'instructores.agenda')->name('instructores.agenda');
+    });
+
+    // API para Mi Agenda (datos JSON)
+    Route::get('/api/mi-agenda', [MiAgendaController::class, 'index'])
+        ->middleware(['auth']) // debe estar dentro del grupo auth
+        ->name('api.mi-agenda');
+    // *** RUTA API DE AGENDA DE INSTRUCTORES ***
+    Route::get('/api/instructor-agenda', [MiAgendaController::class, 'apiAgendaInstructor'])->name('api.instructor-agenda');
+
+
+
+
+    // Vista de Agenda para Administradores (selección de instructores)
+    Route::get('/instructores/agenda', [MiAgendaController::class, 'agendaAdministrador'])
+        ->middleware('role:administrador')
+        ->name('admin.instructores.agenda');
+
+    // Vistas directas
+    Route::get('/programaciones', [ProgramacionController::class, 'index'])->name('admin.programaciones.index');
+    Route::view('/agenda', 'admin.agenda.index')->name('agenda.index');
+    Route::view('/cursos', 'admin.cursos.index')->name('cursos.index');
+    Route::view('/aulas', 'admin.aulas.index')->name('aulas.index');
+});
+
+// ---------------------- Rutas para administrador, coordinador y analista ----------------------
+Route::middleware(['auth', 'role:administrador,coordinador,analista'])->prefix('admin')->name('admin.')->group(function () {
+
+    // Cursos, Grupos y Aulas
+    Route::resource('cursos', CursoController::class)->names('cursos');
+    Route::resource('grupos', GrupoController::class)->names('grupos');
+    Route::resource('aulas', AulaController::class)->names('aulas');
+
+    // Documentos de instructores
+    Route::get('instructores/{instructor}/documentos', [InstructorController::class, 'documentos'])->name('instructores.documentos');
+    Route::post('instructores/{instructor}/documentos', [InstructorController::class, 'asignarDocumento'])->name('instructores.asignarDocumento');
+    Route::post('instructores/{instructor}/documentos/manual', [InstructorController::class, 'asignarDocumentoManual'])->name('instructores.asignarDocumentoManual');
+    Route::put('instructores/documentos/{pivot}', [InstructorController::class, 'actualizarDocumento'])->name('instructores.actualizarDocumento');
+
+    // --- Programaciones ---
+    Route::resource('programaciones', ProgramacionController::class)->parameters(['programaciones' => 'programacion']);
+    Route::post('programaciones/{programacion}/enviar-correo', [ProgramacionController::class, 'enviarCorreo'])->name('programaciones.enviarCorreo');
+    Route::get('mi-agenda/confirmar/{programacion}', [\App\Http\Controllers\MiAgendaController::class, 'confirmarDesdeCorreo'])->name('mi-agenda.confirmar');
+
+
+    // Bloques de programaciones
+    Route::get('programaciones/bloque', [ProgramacionBloqueController::class, 'index'])->name('programaciones.bloque.index');
+    Route::get('programaciones/bloque/cursos', [ProgramacionBloqueController::class, 'getCursosPorGrupo'])->name('programaciones.bloque.cursos');
+    Route::get('programaciones/bloque/ordenar', [ProgramacionBloqueController::class, 'ordenar'])->name('programaciones.bloque.ordenar');
+    Route::post('programaciones/bloque', [ProgramacionBloqueController::class, 'store'])->name('programaciones.bloque.store');
+    Route::get('programaciones/bloque/grupo/{grupo}/codigo/{bloque_codigo?}/edit', [ProgramacionBloqueController::class, 'editBloque'])->name('programaciones.bloque.edit');
+    Route::put('programaciones/bloque/grupo/{grupo}/codigo/{bloque_codigo?}', [ProgramacionBloqueController::class, 'updateBloque'])->name('programaciones.bloque.update');
+
+    // API de Programaciones
+    Route::get('api/grupos/{grupo}/cursos', [ProgramacionController::class, 'getCursosPorGrupoApi'])->name('api.programaciones.cursosPorGrupo');
+    Route::get('api/cursos/{curso}/instructores', [ProgramacionController::class, 'getInstructoresPorCursoApi'])->name('api.programaciones.instructoresPorCurso');
+    Route::post('api/programaciones/calcular-fecha-fin', [ProgramacionController::class, 'calcularFechaFinApi'])->name('api.programaciones.calcularFechaFin');
+    Route::get('api/programaciones/verificar-disponibilidad', [ProgramacionController::class, 'verificarDisponibilidadApi'])->name('api.programaciones.verificarDisponibilidad');
+    Route::get('api/programaciones/detalle-disponibilidad', [ProgramacionController::class, 'getDetalleDisponibilidadApi'])->name('api.programaciones.detalleDisponibilidad');
+
+    // Confirmación de instructores
+    Route::get('/instructor/confirmar/{token}', [ConfirmacionInstructorController::class, 'mostrar'])->name('instructor.confirmar');
+    Route::post('/instructor/confirmar/{token}', [ConfirmacionInstructorController::class, 'procesar'])->name('instructor.confirmar.enviar');
+
+    // Instructores
+    Route::resource('instructores', InstructorController::class)->except(['show'])->names('instructores');
+
+    // AJAX para grupos
+    Route::get('/grupos-por-coordinacion/{coordinacion}', [GrupoController::class, 'getGruposByCoordinacionJson'])->name('grupos.por.coordinacion');
+    Route::get('/grupos-visibles', [GrupoController::class, 'getGruposVisiblesPorUsuarioJson'])->name('grupos.visibles');
+
+    // Edición modal de cursos
+    Route::get('cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
+});
+
+// ---------------------- Rutas exclusivas para administrador ----------------------
+Route::middleware(['auth', 'role:administrador'])->prefix('admin')->name('admin.')->group(function () {
+    Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+    Route::resource('usuarios', UserController::class)->names('users');
+    Route::resource('coordinaciones', CoordinacionController::class)->parameters(['coordinaciones' => 'coordinacion'])->names('coordinaciones');
+    Route::resource('feriados', FeriadoController::class)->parameters(['feriados' => 'feriado'])->names('feriados');
+    Route::get('auditorias', [AuditoriaController::class, 'index'])->name('auditorias.index');
+});
+
+require __DIR__.'/auth.php';
